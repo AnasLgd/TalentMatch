@@ -1,0 +1,200 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:14-alpine
+    container_name: talentmatch-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-talentmatch}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-talentmatch_password}
+      POSTGRES_DB: ${POSTGRES_DB:-talentmatch}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/dev/postgres/init:/docker-entrypoint-initdb.d
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - talentmatch-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-talentmatch}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO (stockage compatible S3)
+  minio:
+    image: minio/minio
+    container_name: talentmatch-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-talentmatch}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-talentmatch_password}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+      - ./docker/dev/minio/config:/root/.minio
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    networks:
+      - talentmatch-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Redis pour le cache et les files d'attente
+  redis:
+    image: redis:7-alpine
+    container_name: talentmatch-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-talentmatch_password}
+    volumes:
+      - redis_data:/data
+      - ./docker/dev/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - talentmatch-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-talentmatch_password}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend FastAPI
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - ENVIRONMENT=${ENVIRONMENT:-development}
+    container_name: talentmatch-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-talentmatch}:${POSTGRES_PASSWORD:-talentmatch_password}@postgres:5432/${POSTGRES_DB:-talentmatch}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-talentmatch_password}@redis:6379/0
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-talentmatch}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-talentmatch_password}
+      - MINIO_USE_SSL=false
+      - SECRET_KEY=${SECRET_KEY:-supersecretkey}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+    volumes:
+      - ./backend:/app
+      - backend_tmp:/tmp
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    networks:
+      - talentmatch-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend Next.js
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - ENVIRONMENT=${ENVIRONMENT:-development}
+    container_name: talentmatch-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      - NEXT_PUBLIC_ENVIRONMENT=${ENVIRONMENT:-development}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    networks:
+      - talentmatch-network
+    command: npm run dev
+
+  # n8n pour les workflows
+  n8n:
+    image: n8nio/n8n
+    container_name: talentmatch-n8n
+    restart: unless-stopped
+    environment:
+      - N8N_PORT=${N8N_PORT:-5678}
+      - N8N_PROTOCOL=http
+      - N8N_HOST=n8n
+      - NODE_ENV=${ENVIRONMENT:-development}
+      - WEBHOOK_URL=http://localhost:${N8N_PORT:-5678}/
+      - GENERIC_TIMEZONE=${TIMEZONE:-Europe/Paris}
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-talentmatch}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-talentmatch_password}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-supersecretkey}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./docker/dev/n8n/custom:/custom
+    ports:
+      - "${N8N_PORT:-5679}:5678"
+    networks:
+      - talentmatch-network
+    depends_on:
+      - postgres
+
+  # Prometheus pour le monitoring (optionnel) 
+  prometheus:
+    image: prom/prometheus
+    container_name: talentmatch-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./docker/dev/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - talentmatch-network
+    profiles:
+      - monitoring
+
+  # Grafana pour la visualisation (optionnel)
+  grafana:
+    image: grafana/grafana
+    container_name: talentmatch-grafana
+    restart: unless-stopped
+    volumes:
+      - ./docker/dev/grafana:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    networks:
+      - talentmatch-network
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+
+networks:
+  talentmatch-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:
+  redis_data:
+  n8n_data:
+  backend_tmp:
+  prometheus_data:
+  grafana_data:

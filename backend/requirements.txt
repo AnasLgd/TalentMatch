@@ -1,0 +1,39 @@
+# FastAPI et serveur
+fastapi>=0.95.0,<0.99.0
+uvicorn>=0.21.1
+pydantic>=1.10.7,<2.0.0  # Nous limitons à Pydantic v1.x
+
+# Base de données et ORM
+sqlalchemy>=2.0.9
+psycopg2-binary>=2.9.6
+alembic>=1.10.3
+
+# Services de stockage
+boto3>=1.26.114
+minio>=7.1.14
+
+# Cache et files d'attente
+redis>=4.5.4
+celery>=5.2.7
+
+# Traitement de texte et NLP
+langchain>=0.0.200
+langchain-community>=0.0.10
+numpy>=1.24.2
+openai>=0.27.4
+sentence-transformers>=2.2.2
+
+# Extraction de documents
+pypdf>=3.7.1
+docx2txt>=0.8
+
+# Sécurité et authentification
+python-jose>=3.3.0
+passlib>=1.7.4
+python-multipart>=0.0.6
+bcrypt>=4.0.1
+
+# Utilitaires
+python-dotenv>=1.0.0
+pyyaml>=6.0
+requests>=2.28.2

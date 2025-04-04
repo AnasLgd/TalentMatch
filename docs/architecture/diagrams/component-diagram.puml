@@ -1,0 +1,36 @@
+@startuml Component Diagram
+
+package "Frontend" {
+  [React App] as ReactApp
+  [Components] as Components
+  [Features] as Features
+  [API Client] as APIClient
+  
+  ReactApp --> Components
+  ReactApp --> Features
+  Features --> APIClient
+}
+
+package "Backend" {
+  [FastAPI] as FastAPI
+  [Use Cases] as UseCases
+  [Repositories] as Repositories
+  [Services] as Services
+  
+  FastAPI --> UseCases
+  UseCases --> Repositories
+  UseCases --> Services
+}
+
+database "PostgreSQL" as DB
+cloud "MinIO" as MinIO
+cloud "n8n" as N8N
+database "Redis" as Redis
+
+APIClient --> FastAPI : HTTP/REST
+Repositories --> DB : SQLAlchemy
+Services --> MinIO : S3 API
+Services --> N8N : Workflow API
+Repositories --> Redis : Cache
+
+@enduml

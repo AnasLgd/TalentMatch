@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 
 from app.core.interfaces.consultant_repository import ConsultantRepository
-from app.core.entities.consultant import Consultant, ConsultantCreate, ConsultantUpdate
+from app.core.entities.consultant import Consultant, ConsultantCreate, ConsultantUpdate, AvailabilityStatus
 from app.infrastructure.database.models import Consultant as ConsultantModel
 from app.infrastructure.database.models import ConsultantSkill as ConsultantSkillModel
 from app.infrastructure.database.models import User as UserModel
@@ -246,26 +246,51 @@ class SQLAlchemyConsultantRepository(ConsultantRepository):
         user_data = {
             "id": user.id,
             "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
+            "full_name": user.full_name,
             "role": user.role.value
         } if user else {}
         
+        # Récupération des compétences du consultant de manière simplifiée
+        # Nous allons récupérer les compétences directement depuis la relation skills
+        skills_data = []
+        if hasattr(db_consultant, 'skills') and db_consultant.skills:
+            for skill in db_consultant.skills:
+                skill_data = {
+                    "id": skill.id,
+                    "name": skill.name,
+                    "level": "intermediate",  # Valeur par défaut
+                    "years": 0  # Valeur par défaut
+                }
+                skills_data.append(skill_data)
+        
+        # Conversion de l'enum status vers availability_status
+        availability_status = AvailabilityStatus.AVAILABLE
+        if db_consultant.status:
+            status_value = db_consultant.status.value
+            # Mapping entre les valeurs d'enum
+            if status_value == "available":
+                availability_status = AvailabilityStatus.AVAILABLE
+            elif status_value == "on_mission":
+                availability_status = AvailabilityStatus.ON_MISSION
+            elif status_value == "unavailable":
+                availability_status = AvailabilityStatus.UNAVAILABLE
+
         return Consultant(
             id=db_consultant.id,
             user_id=db_consultant.user_id,
             company_id=db_consultant.company_id,
             title=db_consultant.title,
-            experience_years=db_consultant.experience_years,
-            availability_status=db_consultant.availability_status.value,
+            experience_years=db_consultant.years_experience,
+            availability_status=availability_status,
             availability_date=db_consultant.availability_date,
             hourly_rate=db_consultant.hourly_rate,
             daily_rate=db_consultant.daily_rate,
             bio=db_consultant.bio,
-            location=db_consultant.location,
-            remote_work=db_consultant.remote_work,
-            max_travel_distance=db_consultant.max_travel_distance,
+            location=getattr(db_consultant, 'location', None),  # Utilisation de getattr pour éviter les erreurs
+            remote_work=getattr(db_consultant, 'remote_work', False),
+            max_travel_distance=getattr(db_consultant, 'max_travel_distance', None),
             created_at=db_consultant.created_at,
-            updated_at=db_consultant.updated_at,
-            user=user_data
+            updated_at=getattr(db_consultant, 'updated_at', None),
+            user=user_data,
+            skills=skills_data
         )

@@ -5,7 +5,10 @@ from typing import List, Optional
 from app.core.entities.consultant import ConsultantCreate, ConsultantUpdate, ConsultantResponse
 from app.core.use_cases.consultant_use_case import ConsultantUseCase
 from app.infrastructure.database.session import get_db
-from app.adapters.repositories.consultant_repository import ConsultantRepository
+from app.adapters.repositories.consultant_repository import SQLAlchemyConsultantRepository
+from app.adapters.repositories.skill_repository import SQLAlchemySkillRepository
+from app.adapters.repositories.user_repository import SQLAlchemyUserRepository
+from app.adapters.repositories.company_repository import SQLAlchemyCompanyRepository
 
 router = APIRouter(
     prefix="/api/consultants",
@@ -14,8 +17,17 @@ router = APIRouter(
 )
 
 def get_consultant_use_case(db: Session = Depends(get_db)):
-    repository = ConsultantRepository(db)
-    return ConsultantUseCase(repository)
+    consultant_repo = SQLAlchemyConsultantRepository(db)
+    skill_repo = SQLAlchemySkillRepository(db)
+    user_repo = SQLAlchemyUserRepository(db)
+    company_repo = SQLAlchemyCompanyRepository(db)
+
+    return ConsultantUseCase(
+        consultant_repository=consultant_repo,
+        skill_repository=skill_repo,
+        user_repository=user_repo,
+        company_repository=company_repo
+    )
 
 @router.post("/", response_model=ConsultantResponse, status_code=status.HTTP_201_CREATED)
 async def create_consultant(
@@ -28,7 +40,7 @@ async def create_consultant(
     return await use_case.create_consultant(consultant)
 
 @router.get("/", response_model=List[ConsultantResponse])
-async def get_consultants(
+async def get_all_consultants(
     company_id: Optional[int] = None,
     skill_id: Optional[int] = None,
     availability: Optional[bool] = None,
@@ -39,7 +51,7 @@ async def get_consultants(
     """
     Récupère la liste des consultants avec filtres optionnels.
     """
-    return await use_case.get_consultants(
+    return await use_case.get_all_consultants(
         company_id=company_id,
         skill_id=skill_id,
         availability=availability,
@@ -55,7 +67,7 @@ async def get_consultant(
     """
     Récupère un consultant par son ID.
     """
-    consultant = await use_case.get_consultant(consultant_id)
+    consultant = await use_case.get_consultant_by_id(consultant_id)
     if not consultant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

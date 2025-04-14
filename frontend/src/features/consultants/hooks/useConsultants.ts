@@ -17,8 +17,20 @@ export function useConsultants(filters?: ConsultantFilters) {
   // Requête pour récupérer les consultants
   const consultantsQuery = useQuery({
     queryKey,
-    queryFn: () => consultantService.getConsultants(filters),
+    queryFn: () => {
+      console.log('[useConsultants] Démarrage de la requête avec filtres:', filters);
+      return consultantService.getConsultants(filters)
+        .then(data => {
+          console.log('[useConsultants] Données récupérées:', data);
+          return data;
+        })
+        .catch(error => {
+          console.error('[useConsultants] Erreur API:', error);
+          throw error;
+        });
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1 // Limiter le nombre de tentatives pour éviter trop d'appels en cas d'erreur
   });
   
   // Mutation pour créer un consultant
@@ -88,7 +100,18 @@ export function useConsultants(filters?: ConsultantFilters) {
   const useConsultant = (id: number) => {
     return useQuery({
       queryKey: ['consultant', id],
-      queryFn: () => consultantService.getConsultantById(id),
+      queryFn: () => {
+        console.log(`[useConsultant] Récupération du consultant ID: ${id}`);
+        return consultantService.getConsultantById(id)
+          .then(data => {
+            console.log(`[useConsultant] Données du consultant ${id} récupérées:`, data);
+            return data;
+          })
+          .catch(error => {
+            console.error(`[useConsultant] Erreur lors de la récupération du consultant ${id}:`, error);
+            throw error;
+          });
+      },
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };

@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Search, 
   Plus, 
@@ -30,58 +29,55 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { useConsultants } from "@/features/consultants/hooks/useConsultants";
+import { ConsultantDisplay } from "@/features/consultants/types";
 
-interface Consultant {
-  id: number;
-  name: string;
-  role: string;
-  experience: string;
-  skills: string[];
-  status: "Disponible" | "En mission" | "Congés" | "Formation";
-}
-
-const consultants: Consultant[] = [
-  { id: 1, name: "Sophie Martin", role: "Développeur Frontend", experience: "5 ans", skills: ["React", "TypeScript", "Tailwind"], status: "Disponible" },
-  { id: 2, name: "Thomas Bernard", role: "Data Scientist", experience: "4 ans", skills: ["Python", "TensorFlow", "SQL"], status: "En mission" },
-  { id: 3, name: "Emma Laurent", role: "UX Designer", experience: "6 ans", skills: ["Figma", "Adobe XD", "Sketch"], status: "Disponible" },
-  { id: 4, name: "Lucas Dubois", role: "DevOps Engineer", experience: "7 ans", skills: ["Docker", "Kubernetes", "AWS"], status: "En mission" },
-  { id: 5, name: "Chloé Petit", role: "Développeur Backend", experience: "3 ans", skills: ["Java", "Spring", "PostgreSQL"], status: "Formation" },
-  { id: 6, name: "Maxime Leroy", role: "Chef de projet", experience: "8 ans", skills: ["Agile", "JIRA", "MS Project"], status: "Disponible" },
-  { id: 7, name: "Léa Fontaine", role: "Analyste Business", experience: "4 ans", skills: ["Power BI", "Excel", "SQL"], status: "En mission" },
-  { id: 8, name: "Hugo Martin", role: "Développeur Mobile", experience: "5 ans", skills: ["Swift", "Kotlin", "Flutter"], status: "Congés" },
-];
-
-const getStatusColor = (status: Consultant["status"]) => {
+// Fonction utilitaire pour déterminer la couleur du badge de statut
+const getStatusColor = (status: string): string => {
   switch (status) {
     case "Disponible":
-      return "bg-green-500/20 text-green-500";
+      return "bg-green-100 text-green-800";
+    case "Partiellement disponible":
+      return "bg-blue-100 text-blue-800";
     case "En mission":
-      return "bg-blue-500/20 text-blue-500";
-    case "Congés":
-      return "bg-amber-500/20 text-amber-500";
-    case "Formation":
-      return "bg-purple-500/20 text-purple-500";
+      return "bg-amber-100 text-amber-800";
+    case "Indisponible":
+      return "bg-red-100 text-red-800";
     default:
-      return "bg-gray-500/20 text-gray-500";
+      return "bg-gray-100 text-gray-800";
   }
 };
 
 const Consultants = () => {
+  const {
+    consultants,
+    isLoading,
+    isError,
+    error,
+  } = useConsultants();
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredConsultants, setFilteredConsultants] = useState(consultants);
+  const [filteredConsultants, setFilteredConsultants] = useState<ConsultantDisplay[]>([]);
+
+  // Initialiser les consultants filtrés quand les données sont chargées
+  useEffect(() => {
+    if (consultants) {
+      setFilteredConsultants(consultants);
+    }
+  }, [consultants]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
     
-    if (term.trim() === "") {
-      setFilteredConsultants(consultants);
+    if (!consultants || term.trim() === "") {
+      setFilteredConsultants(consultants || []);
     } else {
-      const filtered = consultants.filter(
+      const filtered = (consultants || []).filter(
         (consultant) =>
           consultant.name.toLowerCase().includes(term) ||
           consultant.role.toLowerCase().includes(term) ||
-          consultant.skills.some((skill) => skill.toLowerCase().includes(term))
+          consultant.skills.some((skill) => skill.name.toLowerCase().includes(term))
       );
       setFilteredConsultants(filtered);
     }
@@ -118,90 +114,112 @@ const Consultants = () => {
         </div>
       </div>
 
-      <Card className="border-border/40">
-        <div className="relative w-full overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[300px]">
-                  <div className="flex items-center">
-                    Nom
-                    <ArrowUpDown className="ml-1 h-3 w-3" />
-                  </div>
-                </TableHead>
-                <TableHead>
-                  <div className="flex items-center">
-                    Rôle
-                    <ArrowUpDown className="ml-1 h-3 w-3" />
-                  </div>
-                </TableHead>
-                <TableHead>Expérience</TableHead>
-                <TableHead>Compétences</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredConsultants.map((consultant) => (
-                <TableRow key={consultant.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                        <span className="text-xs">
-                          {consultant.name.split(" ").map(n => n[0]).join("")}
-                        </span>
-                      </div>
-                      <span>{consultant.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{consultant.role}</TableCell>
-                  <TableCell>{consultant.experience}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {consultant.skills.map((skill, idx) => (
-                        <Badge key={idx} variant="secondary">{skill}</Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`inline-flex rounded-full px-2 py-1 text-xs ${getStatusColor(consultant.status)}`}>
-                      {consultant.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <FileText className="mr-2 h-4 w-4" />
-                          <span>Voir profil</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          <span>Modifier</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Download className="mr-2 h-4 w-4" />
-                          <span>Exporter CV</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-500">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          <span>Supprimer</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+      {isLoading && (
+        <div className="w-full p-8 text-center">
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded-md mb-4 w-3/4 mx-auto"></div>
+            <div className="h-4 bg-gray-200 rounded-md mb-4 w-1/2 mx-auto"></div>
+            <div className="h-4 bg-gray-200 rounded-md w-2/3 mx-auto"></div>
+          </div>
+          <p className="mt-4 text-muted-foreground">Chargement des consultants...</p>
         </div>
-      </Card>
+      )}
+      
+      {isError && (
+        <div className="w-full p-8 text-center">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <p className="text-red-600 font-medium">Une erreur est survenue lors du chargement des consultants</p>
+            <p className="text-red-500 text-sm mt-1">{String(error)}</p>
+          </div>
+        </div>
+      )}
+      
+      {!isLoading && !isError && (
+        <Card className="border-border/40">
+          <div className="relative w-full overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[300px]">
+                    <div className="flex items-center">
+                      Nom
+                      <ArrowUpDown className="ml-1 h-3 w-3" />
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center">
+                      Rôle
+                      <ArrowUpDown className="ml-1 h-3 w-3" />
+                    </div>
+                  </TableHead>
+                  <TableHead>Expérience</TableHead>
+                  <TableHead>Compétences</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredConsultants.map((consultant) => (
+                  <TableRow key={consultant.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                          <span className="text-xs">
+                            {consultant.name.split(" ").map(n => n[0]).join("")}
+                          </span>
+                        </div>
+                        <span>{consultant.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{consultant.role}</TableCell>
+                    <TableCell>{consultant.experience}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {consultant.skills.map((skill, idx) => (
+                          <Badge key={idx} variant="secondary">{skill.name}</Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`inline-flex rounded-full px-2 py-1 text-xs ${getStatusColor(consultant.status)}`}>
+                        {consultant.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <FileText className="mr-2 h-4 w-4" />
+                            <span>Voir profil</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Edit className="mr-2 h-4 w-4" />
+                            <span>Modifier</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Download className="mr-2 h-4 w-4" />
+                            <span>Exporter CV</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-red-500">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            <span>Supprimer</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      )}
     </div>
   );
 };

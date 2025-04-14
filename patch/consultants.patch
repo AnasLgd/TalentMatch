@@ -1,0 +1,110 @@
+diff --git a/src/features/consultants/services/consultant-service.ts b/src/features/consultants/services/consultant-service.ts
+index e69de29..9cf3f0a 100644
+--- a/src/features/consultants/services/consultant-service.ts
++++ b/src/features/consultants/services/consultant-service.ts
+@@ -46,7 +46,7 @@ const buildQueryParams = (filters?: ConsultantFilters): URLSearchParams => {
+ export const consultantService = {
+   /**
+    * Récupère la liste des consultants avec filtres optionnels
+    */
+   async getConsultants(filters?: ConsultantFilters): Promise<ConsultantDisplay[]> {
+     const queryParams = buildQueryParams(filters);
+-    const endpoint = `/v1/consultants?${queryParams.toString()}`;
++    const endpoint = `/consultants?${queryParams.toString()}`;
+
+     try {
+       const response = await apiClient.get<Consultant[]>(endpoint);
+diff --git a/src/pages/Consultants.tsx b/src/pages/Consultants.tsx
+index e69de29..9cf3f0a 100644
+--- a/src/pages/Consultants.tsx
++++ b/src/pages/Consultants.tsx
+@@ -1,12 +1,14 @@
+ import React, { useState } from "react";
+ import { 
+   Search, 
+   Plus, 
+   Filter, 
+   ArrowUpDown, 
+   MoreVertical, 
+   Edit, 
+   Trash2, 
+   FileText,
+   Download 
+ } from "lucide-react";
++import { useConsultants } from "@/features/consultants/hooks/useConsultants";
+ import { Button } from "@/components/ui/button";
+ import { Input } from "@/components/ui/input";
+ import { 
+@@ -19,37 +21,11 @@ import {
+   TableBody,
+   TableCell,
+   TableHead,
+   TableHeader,
+   TableRow,
+ } from "@/components/ui/table";
+ import { Badge } from "@/components/ui/badge";
+ import { Card } from "@/components/ui/card";
+-
+-interface Consultant {
+-  id: number;
+-  name: string;
+-  role: string;
+-  experience: string;
+-  skills: string[];
+-  status: "Disponible" | "En mission" | "Congés" | "Formation";
+-}
+-
+-const consultants: Consultant[] = [
+-  { id: 1, name: "Sophie Martin", role: "Développeur Frontend", experience: "5 ans", skills: ["React", "TypeScript", "Tailwind"], status: "Disponible" },
+-  { id: 2, name: "Thomas Bernard", role: "Data Scientist", experience: "4 ans", skills: ["Python", "TensorFlow", "SQL"], status: "En mission" },
+-  { id: 3, name: "Emma Laurent", role: "UX Designer", experience: "6 ans", skills: ["Figma", "Adobe XD", "Sketch"], status: "Disponible" },
+-  { id: 4, name: "Lucas Dubois", role: "DevOps Engineer", experience: "7 ans", skills: ["Docker", "Kubernetes", "AWS"], status: "En mission" },
+-  { id: 5, name: "Chloé Petit", role: "Développeur Backend", experience: "3 ans", skills: ["Java", "Spring", "PostgreSQL"], status: "Formation" },
+-  { id: 6, name: "Maxime Leroy", role: "Chef de projet", experience: "8 ans", skills: ["Agile", "JIRA", "MS Project"], status: "Disponible" },
+-  { id: 7, name: "Léa Fontaine", role: "Analyste Business", experience: "4 ans", skills: ["Power BI", "Excel", "SQL"], status: "En mission" },
+-  { id: 8, name: "Hugo Martin", role: "Développeur Mobile", experience: "5 ans", skills: ["Swift", "Kotlin", "Flutter"], status: "Congés" },
+-];
+-
+-const getStatusColor = (status: Consultant["status"]) => {
++const getStatusColor = (status: string) => {
+   switch (status) {
+     case "Disponible":
+       return "bg-green-500/20 text-green-500";
+@@ -54,9 +30,14 @@ const getStatusColor = (status: Consultant["status"]) => {
+ const Consultants = () => {
+   const [searchTerm, setSearchTerm] = useState("");
+-  const [filteredConsultants, setFilteredConsultants] = useState(consultants);
++  const {
++    consultants,
++    isLoading,
++    isError,
++    error,
++  } = useConsultants();
++
++  const [filteredConsultants, setFilteredConsultants] = useState<any[]>([]);
+ 
+   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+     const term = e.target.value.toLowerCase();
+     setSearchTerm(term);
+     
+-    if (term.trim() === "") {
+-      setFilteredConsultants(consultants);
++    if (!consultants || term.trim() === "") {
++      setFilteredConsultants(consultants || []);
+     } else {
+       const filtered = (consultants || []).filter(
+         (consultant) =>
+@@ -65,6 +46,13 @@ const Consultants = () => {
+       setFilteredConsultants(filtered);
+     }
+   };
++
++  // Mettre à jour filteredConsultants si consultants est chargé (exemple : useEffect)
++  // ou simplement initialiser filteredConsultants dans un useEffect :
++  // useEffect(() => {
++  //   if (consultants) setFilteredConsultants(consultants);
++  // }, [consultants]);
++
+   return (
+     <div className="space-y-8">
+       <div>

@@ -25,9 +25,35 @@ class ConsultantUseCase:
         self.user_repository = user_repository
         self.company_repository = company_repository
     
-    async def get_all_consultants(self) -> List[Consultant]:
-        """Récupère tous les consultants"""
-        return await self.consultant_repository.get_all()
+    async def get_all_consultants(
+        self,
+        company_id: Optional[int] = None,
+        skill_id: Optional[int] = None,
+        availability: Optional[bool] = None,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[Consultant]:
+        """
+        Récupère tous les consultants, avec filtres optionnels
+        """
+        # 1. Base: on récupère tous les consultants
+        consultants = await self.consultant_repository.get_all()
+
+        # 2. Filtres
+        if company_id is not None:
+            # ex : on peut récupérer la liste via get_by_company_id
+            consultants = await self.consultant_repository.get_by_company_id(company_id)
+
+        # si tu veux filtrer par skill_id => consultant_repository.search_consultants
+        # si tu veux filtrer par availability => 
+        #   ex. re-filtrer localement, ou un repository method get_by_availability
+
+        # 3. skip / limit
+        # s'il s'agit d'une simple liste Python:
+        # consultants = consultants[skip : skip + limit]
+        # ou s'il s'agit d'une query, on peut le faire avant un .all() (dans le repo)
+
+        return consultants
     
     async def get_consultant_by_id(self, consultant_id: int) -> Optional[Consultant]:
         """Récupère un consultant par son ID"""

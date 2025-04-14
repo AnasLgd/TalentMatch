@@ -1,16 +1,26 @@
 /**
+ * REMARQUE IMPORTANTE SUR LES CHEMINS D'API:
+ * La variable d'environnement VITE_API_URL est déjà définie avec le préfixe '/api'
+ * Tous les chemins d'API dans ce service doivent donc commencer par '/' sans '/api'
+ * Par exemple: '/consultants' et non '/api/consultants'
+ *
+ * Configuration actuelle:
+ * - VITE_API_URL=http://localhost:8000/api
+ * - Routes backend: /api/consultants
+ * - Routes dans ce service: /consultants (sans doublon du préfixe /api)
+ *
  * Service pour la gestion des consultants
  * Organisation selon la structure spécifiée
  */
 
 import apiClient from "@/lib/api/api-client";
-import { 
-  Consultant, 
-  ConsultantFilters, 
-  ConsultantCreate, 
-  ConsultantUpdate, 
+import {
+  Consultant,
+  ConsultantFilters,
+  ConsultantCreate,
+  ConsultantUpdate,
   ConsultantDisplay,
-  AvailabilityStatus 
+  AvailabilityStatus,
 } from "../types";
 
 // Fonction utilitaire pour mapper la réponse du backend vers le format d'affichage
@@ -19,7 +29,9 @@ const mapToConsultantDisplay = (consultant: Consultant): ConsultantDisplay => {
     id: consultant.id,
     name: consultant.user?.full_name || "Inconnu",
     role: consultant.title,
-    experience: consultant.experience_years ? `${consultant.experience_years} ans` : "Non spécifié",
+    experience: consultant.experience_years
+      ? `${consultant.experience_years} ans`
+      : "Non spécifié",
     skills: consultant.skills || [],
     status: mapAvailabilityStatusToDisplay(consultant.availability_status),
     email: consultant.user?.email,
@@ -46,22 +58,22 @@ const mapAvailabilityStatusToDisplay = (status: AvailabilityStatus): string => {
 // Construction des paramètres de requête pour les filtres
 const buildQueryParams = (filters?: ConsultantFilters): URLSearchParams => {
   const params = new URLSearchParams();
-  
+
   if (filters) {
     if (filters.search) {
-      params.append('search', filters.search);
+      params.append("search", filters.search);
     }
     if (filters.status) {
-      params.append('status', filters.status);
+      params.append("status", filters.status);
     }
     if (filters.skills && filters.skills.length > 0) {
-      filters.skills.forEach(skill => params.append('skills', skill));
+      filters.skills.forEach((skill) => params.append("skills", skill));
     }
     if (filters.experience_years !== undefined) {
-      params.append('experience_years', filters.experience_years.toString());
+      params.append("experience_years", filters.experience_years.toString());
     }
   }
-  
+
   return params;
 };
 
@@ -69,12 +81,20 @@ export const consultantService = {
   /**
    * Récupère la liste des consultants avec filtres optionnels
    */
-  async getConsultants(filters?: ConsultantFilters): Promise<ConsultantDisplay[]> {
+  async getConsultants(
+    filters?: ConsultantFilters
+  ): Promise<ConsultantDisplay[]> {
     const queryParams = buildQueryParams(filters);
-    const endpoint = `/v1/consultants?${queryParams.toString()}`;
+    const endpoint = `/consultants?${queryParams.toString()}`;
     
+    console.log(`[Consultants] Envoi requête GET vers: ${endpoint}`);
+    if (filters) {
+      console.log('[Consultants] Filtres appliqués:', filters);
+    }
+
     try {
       const response = await apiClient.get<Consultant[]>(endpoint);
+      console.log('[Consultants] Réponse API:', response);
       return response.map(mapToConsultantDisplay);
     } catch (error) {
       console.error("Erreur lors de la récupération des consultants:", error);
@@ -87,10 +107,13 @@ export const consultantService = {
    */
   async getConsultantById(id: number): Promise<ConsultantDisplay | null> {
     try {
-      const consultant = await apiClient.get<Consultant>(`/v1/consultants/${id}`);
+      const consultant = await apiClient.get<Consultant>(`/consultants/${id}`);
       return mapToConsultantDisplay(consultant);
     } catch (error) {
-      console.error(`Erreur lors de la récupération du consultant ID ${id}:`, error);
+      console.error(
+        `Erreur lors de la récupération du consultant ID ${id}:`,
+        error
+      );
       return null;
     }
   },
@@ -100,9 +123,12 @@ export const consultantService = {
    */
   async getConsultantRawData(id: number): Promise<Consultant | null> {
     try {
-      return await apiClient.get<Consultant>(`/v1/consultants/${id}`);
+      return await apiClient.get<Consultant>(`/consultants/${id}`);
     } catch (error) {
-      console.error(`Erreur lors de la récupération des données brutes du consultant ID ${id}:`, error);
+      console.error(
+        `Erreur lors de la récupération des données brutes du consultant ID ${id}:`,
+        error
+      );
       return null;
     }
   },
@@ -110,9 +136,14 @@ export const consultantService = {
   /**
    * Crée un nouveau consultant
    */
-  async createConsultant(consultant: ConsultantCreate): Promise<ConsultantDisplay> {
+  async createConsultant(
+    consultant: ConsultantCreate
+  ): Promise<ConsultantDisplay> {
     try {
-      const newConsultant = await apiClient.post<Consultant>('/v1/consultants', consultant);
+      const newConsultant = await apiClient.post<Consultant>(
+        "/consultants",
+        consultant
+      );
       return mapToConsultantDisplay(newConsultant);
     } catch (error) {
       console.error("Erreur lors de la création du consultant:", error);
@@ -123,12 +154,21 @@ export const consultantService = {
   /**
    * Met à jour un consultant existant
    */
-  async updateConsultant(id: number, consultant: ConsultantUpdate): Promise<ConsultantDisplay> {
+  async updateConsultant(
+    id: number,
+    consultant: ConsultantUpdate
+  ): Promise<ConsultantDisplay> {
     try {
-      const updatedConsultant = await apiClient.put<Consultant>(`/v1/consultants/${id}`, consultant);
+      const updatedConsultant = await apiClient.put<Consultant>(
+        `/consultants/${id}`,
+        consultant
+      );
       return mapToConsultantDisplay(updatedConsultant);
     } catch (error) {
-      console.error(`Erreur lors de la mise à jour du consultant ID ${id}:`, error);
+      console.error(
+        `Erreur lors de la mise à jour du consultant ID ${id}:`,
+        error
+      );
       throw error;
     }
   },
@@ -138,10 +178,13 @@ export const consultantService = {
    */
   async deleteConsultant(id: number): Promise<void> {
     try {
-      await apiClient.delete<void>(`/v1/consultants/${id}`);
+      await apiClient.delete<void>(`/consultants/${id}`);
     } catch (error) {
-      console.error(`Erreur lors de la suppression du consultant ID ${id}:`, error);
+      console.error(
+        `Erreur lors de la suppression du consultant ID ${id}:`,
+        error
+      );
       throw error;
     }
-  }
+  },
 };

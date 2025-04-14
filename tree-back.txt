@@ -1,0 +1,95 @@
+./backend
+├── Dockerfile
+├── alembic.ini
+├── app
+│   ├── adapters
+│   │   ├── n8n
+│   │   │   └── workflow_service.py
+│   │   ├── repositories
+│   │   │   ├── collaboration_repository.py
+│   │   │   ├── company_repository.py
+│   │   │   ├── consultant_repository.py
+│   │   │   ├── match_repository.py
+│   │   │   ├── tender_repository.py
+│   │   │   └── user_repository.py
+│   │   └── services
+│   │       ├── agent_ia_maison_service.py
+│   │       ├── cv_analysis_service.py
+│   │       ├── enhanced_cv_analysis_service.py
+│   │       ├── matchmaking_service.py
+│   │       ├── n8n_cv_analysis_service.py
+│   │       └── rag_service.py
+│   ├── api
+│   │   └── v1
+│   │       ├── collaborations.py
+│   │       ├── companies.py
+│   │       ├── consultants.py
+│   │       ├── cv_analysis.py
+│   │       ├── matches.py
+│   │       ├── n8n.py
+│   │       ├── rag.py
+│   │       └── tenders.py
+│   ├── core
+│   │   ├── config.py
+│   │   ├── entities
+│   │   │   ├── collaboration.py
+│   │   │   ├── company.py
+│   │   │   ├── consultant.py
+│   │   │   ├── match.py
+│   │   │   ├── portfolio.py
+│   │   │   ├── skill.py
+│   │   │   ├── tender.py
+│   │   │   └── user.py
+│   │   ├── interfaces
+│   │   │   ├── collaboration_repository.py
+│   │   │   ├── collaboration_service.py
+│   │   │   ├── company_repository.py
+│   │   │   ├── consultant_repository.py
+│   │   │   ├── cv_analysis_service.py
+│   │   │   ├── cv_extraction_service.py
+│   │   │   ├── match_repository.py
+│   │   │   ├── matchmaking_service.py
+│   │   │   ├── n8n_integration_service.py
+│   │   │   ├── portfolio_repository.py
+│   │   │   ├── rag_service.py
+│   │   │   ├── skill_repository.py
+│   │   │   ├── tender_repository.py
+│   │   │   └── user_repository.py
+│   │   └── use_cases
+│   │       ├── collaboration_use_case.py
+│   │       ├── consultant_use_case.py
+│   │       ├── cv_analysis_use_case.py
+│   │       ├── match_use_case.py
+│   │       ├── portfolio_use_case.py
+│   │       ├── tender_use_case.py
+│   │       └── user_use_case.py
+│   ├── cv_extraction
+│   ├── infrastructure
+│   │   ├── cache
+│   │   ├── database
+│   │   │   ├── models.py
+│   │   │   ├── seed.sql
+│   │   │   └── session.py
+│   │   └── storage
+│   └── main.py
+├── init_db.py
+├── migrations
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions
+│       ├── 001_initial.py
+│       ├── 002_n8n_ia_maison.py
+│       ├── 003_convert_tender_skills_to_model.py
+│       └── 004_add_workflow_status_enum.py
+├── requirements.txt
+├── setup.sh
+├── tests
+│   ├── conftest.py
+│   ├── e2e
+│   ├── integration
+│   ├── test_api.py
+│   ├── test_workflows.py
+│   └── unit
+└── uvicorn_output.log
+
+23 directories, 70 files

@@ -24,13 +24,31 @@ class Settings(BaseSettings):
     def DATABASE_URL(self) -> str:
         # Force the port to be 5432 (internal Docker container port)
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:5432/{self.POSTGRES_DB}"
-    
     # Configuration de MinIO (stockage compatible S3)
     MINIO_HOST: str = os.getenv("MINIO_HOST", "minio" if os.getenv("ENVIRONMENT") == "development" else "localhost")
     MINIO_PORT: str = os.getenv("MINIO_PORT", "9000")
     MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY", os.getenv("MINIO_ROOT_USER", "talentmatch"))
     MINIO_SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY", os.getenv("MINIO_ROOT_PASSWORD", "talentmatch_password"))
     MINIO_BUCKET: str = os.getenv("MINIO_BUCKET", "talentmatch")
+    MINIO_USE_SSL: bool = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
+    
+    # Propriétés additionnelles pour le client MinIO
+    @property
+    def MINIO_ENDPOINT(self) -> str:
+        return f"{self.MINIO_HOST}:{self.MINIO_PORT}"
+    
+    @property
+    def MINIO_SECURE(self) -> bool:
+        return self.MINIO_USE_SSL
+    
+    @property
+    def MINIO_BUCKET_NAME(self) -> str:
+        return self.MINIO_BUCKET
+    
+    @property
+    def MINIO_PUBLIC_URL(self) -> str:
+        protocol = "https" if self.MINIO_USE_SSL else "http"
+        return os.getenv("MINIO_PUBLIC_URL", f"{protocol}://localhost:{self.MINIO_PORT}")
     MINIO_USE_SSL: bool = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
     
     # Configuration de Redis (cache)

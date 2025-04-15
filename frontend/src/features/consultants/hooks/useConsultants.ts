@@ -7,6 +7,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { consultantService } from '../services/consultant-service';
 import { ConsultantFilters, ConsultantCreate, ConsultantUpdate, ConsultantDisplay } from '../types';
 import { toast } from '@/hooks/use-toast';
+import { ApiError } from '@/lib/api/error-handler';
+import { ErrorType } from '@/components/common/GlobalError';
 
 export function useConsultants(filters?: ConsultantFilters) {
   const queryClient = useQueryClient();
@@ -46,12 +48,48 @@ export function useConsultants(filters?: ConsultantFilters) {
         variant: 'default',
       });
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
+      // Gestion spécifique des erreurs selon le type
+      const apiError = error as ApiError;
+      
+      // Message d'erreur spécifique au code HTTP
+      let title = 'Erreur';
+      let description = 'Une erreur est survenue lors de la création du consultant';
+      
+      // Utiliser le système d'erreur centralisé pour mapper les erreurs
+      if (apiError.errorType) {
+        switch (apiError.errorType) {
+          case ErrorType.UNEXPECTED:
+            title = 'Erreur inattendue';
+            description = 'Une erreur inattendue est survenue. Veuillez réessayer.';
+            break;
+          case ErrorType.SERVICE_UNAVAILABLE:
+            title = 'Service indisponible';
+            description = 'Service temporairement indisponible. Merci de réessayer.';
+            break;
+          case ErrorType.MAINTENANCE:
+            title = 'Maintenance en cours';
+            description = 'Le service est en maintenance. Veuillez patienter.';
+            break;
+          case ErrorType.VALIDATION:
+            title = 'Données invalides';
+            description = 'Veuillez vérifier les informations saisies et réessayer.';
+            break;
+          default:
+            // Utiliser les valeurs par défaut
+        }
+      }
+      
       toast({
-        title: 'Erreur',
-        description: `Erreur lors de la création du consultant: ${error}`,
+        title,
+        description,
         variant: 'destructive',
       });
+      
+      // Si nous sommes en développement, afficher l'erreur complète dans la console
+      if (import.meta.env.DEV) {
+        console.error('[useConsultants] Erreur détaillée:', apiError);
+      }
     },
   });
   

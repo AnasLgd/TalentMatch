@@ -135,10 +135,11 @@ class SQLAlchemyCompanyRepository(CompanyRepository):
             description=db_company.description,
             website=db_company.website,
             address=db_company.address,
-            city=db_company.city,
-            postal_code=db_company.postal_code,
-            country=db_company.country,
-            is_active=db_company.is_active,
+            # Les champs city, postal_code et country n'existent pas dans le modèle SQL
+            city=None,
+            postal_code=None,
+            country=None,
+            is_active=db_company.is_esn,  # Utilisons is_esn comme équivalent à is_active
             created_at=db_company.created_at,
             updated_at=db_company.updated_at
         )

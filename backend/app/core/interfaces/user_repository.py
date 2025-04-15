@@ -35,3 +35,7 @@ class UserRepository(Protocol):
     
     async def search_users(self, query: str, company_id: Optional[int] = None) -> List[User]:
         ...
+        
+    async def get_available_users(self) -> List[User]:
+        """Récupère les utilisateurs qui ne sont pas déjà consultants"""
+        ...

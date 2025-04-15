@@ -47,11 +47,13 @@ class SQLAlchemyUserRepository(UserRepository):
             hashed_password = get_password_hash(user.password)
             
             # Créer l'utilisateur
+            # Combiner first_name et last_name en full_name
+            full_name = f"{user.first_name} {user.last_name}".strip()
+            
             db_user = UserModel(
                 email=user.email,
-                hashed_password=hashed_password,
-                first_name=user.first_name,
-                last_name=user.last_name,
+                password_hash=hashed_password,  # Correction du nom du champ
+                full_name=full_name,
                 role=user.role,
                 company_id=user.company_id,
                 is_active=user.is_active if hasattr(user, "is_active") else True
@@ -80,8 +82,23 @@ class SQLAlchemyUserRepository(UserRepository):
         
         # Hacher le mot de passe si fourni
         if "password" in update_data:
-            update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
+            update_data["password_hash"] = get_password_hash(update_data.pop("password"))
         
+        # Traiter first_name et last_name
+        if "first_name" in update_data or "last_name" in update_data:
+            # Récupérer les valeurs actuelles pour les champs non fournis
+            current_name_parts = db_user.full_name.split(' ', 1)
+            current_first_name = current_name_parts[0]
+            current_last_name = current_name_parts[1] if len(current_name_parts) > 1 else ""
+            
+            # Utiliser les nouvelles valeurs ou les valeurs actuelles si non fournies
+            new_first_name = update_data.pop("first_name", current_first_name)
+            new_last_name = update_data.pop("last_name", current_last_name)
+            
+            # Mettre à jour le full_name
+            db_user.full_name = f"{new_first_name} {new_last_name}".strip()
+        
+        # Mettre à jour les autres champs
         for key, value in update_data.items():
             setattr(db_user, key, value)
         
@@ -112,7 +129,7 @@ class SQLAlchemyUserRepository(UserRepository):
         if not user:
             return None
         
-        if not verify_password(password, user.hashed_password):
+        if not verify_password(password, user.password_hash):
             return None
         
         return self._map_to_entity(user)
@@ -123,7 +140,7 @@ class SQLAlchemyUserRepository(UserRepository):
         if not db_user:
             return False
         
-        db_user.hashed_password = get_password_hash(new_password)
+        db_user.password_hash = get_password_hash(new_password)
         self.db.commit()
         return True
     
@@ -136,8 +153,7 @@ class SQLAlchemyUserRepository(UserRepository):
         """Recherche des utilisateurs par critères"""
         search = f"%{query}%"
         users_query = self.db.query(UserModel).filter(
-            (UserModel.first_name.ilike(search)) |
-            (UserModel.last_name.ilike(search)) |
+            (UserModel.full_name.ilike(search)) |
             (UserModel.email.ilike(search))
         )
         
@@ -146,14 +162,36 @@ class SQLAlchemyUserRepository(UserRepository):
         
         users = users_query.all()
         return [self._map_to_entity(user) for user in users]
+        
+    async def get_available_users(self) -> List[User]:
+        """
+        Récupère les utilisateurs qui ne sont pas déjà consultants
+        """
+        # Requête pour trouver les utilisateurs qui n'ont pas de consultant associé
+        from app.infrastructure.database.models import Consultant as ConsultantModel
+        
+        # Sous-requête pour obtenir les user_id des consultants existants
+        consultant_user_ids = self.db.query(ConsultantModel.user_id).subquery()
+        
+        # Requête principale pour obtenir les utilisateurs qui ne sont pas dans la sous-requête
+        users = self.db.query(UserModel).filter(
+            UserModel.id.notin_(consultant_user_ids)
+        ).all()
+        
+        return [self._map_to_entity(user) for user in users]
     
     def _map_to_entity(self, db_user: UserModel) -> User:
         """Convertit un modèle SQLAlchemy en entité"""
+        # Extraire first_name et last_name du full_name
+        name_parts = db_user.full_name.split(' ', 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ""
+        
         return User(
             id=db_user.id,
             email=db_user.email,
-            first_name=db_user.first_name,
-            last_name=db_user.last_name,
+            first_name=first_name,
+            last_name=last_name,
             role=db_user.role.value,
             company_id=db_user.company_id,
             is_active=db_user.is_active,

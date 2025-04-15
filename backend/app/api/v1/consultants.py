@@ -11,7 +11,7 @@ from app.adapters.repositories.user_repository import SQLAlchemyUserRepository
 from app.adapters.repositories.company_repository import SQLAlchemyCompanyRepository
 
 router = APIRouter(
-    prefix="/api/consultants",
+    prefix="/consultants",
     tags=["consultants"],
     responses={404: {"description": "Consultant non trouvé"}},
 )

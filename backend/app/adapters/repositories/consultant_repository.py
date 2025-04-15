@@ -45,28 +45,31 @@ class SQLAlchemyConsultantRepository(ConsultantRepository):
     async def create(self, consultant: ConsultantCreate) -> Consultant:
         """Crée un nouveau consultant"""
         try:
-            # Vérifier que l'utilisateur existe
-            user = self.db.query(UserModel).filter(UserModel.id == consultant.user_id).first()
-            if not user:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="L'utilisateur n'existe pas"
-                )
+            # Vérifier que l'utilisateur existe seulement si un user_id est fourni
+            if consultant.user_id is not None:
+                user = self.db.query(UserModel).filter(UserModel.id == consultant.user_id).first()
+                if not user:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="L'utilisateur n'existe pas"
+                    )
             
             # Créer le consultant
             db_consultant = ConsultantModel(
                 user_id=consultant.user_id,
                 company_id=consultant.company_id,
                 title=consultant.title,
-                experience_years=consultant.experience_years,
-                availability_status=consultant.availability_status,
+                years_experience=consultant.experience_years,
+                status=consultant.availability_status,
                 availability_date=consultant.availability_date,
                 hourly_rate=consultant.hourly_rate,
                 daily_rate=consultant.daily_rate,
                 bio=consultant.bio,
-                location=consultant.location,
-                remote_work=consultant.remote_work,
-                max_travel_distance=consultant.max_travel_distance
+                photo_url=consultant.photo_url,
+                # Les champs suivants ne sont pas dans le modèle de base de données
+                # location=consultant.location,
+                # remote_work=consultant.remote_work,
+                # max_travel_distance=consultant.max_travel_distance
             )
             
             self.db.add(db_consultant)
@@ -197,7 +200,7 @@ class SQLAlchemyConsultantRepository(ConsultantRepository):
     async def get_available_consultants(self) -> List[Consultant]:
         """Récupère les consultants disponibles"""
         consultants = self.db.query(ConsultantModel).filter(
-            ConsultantModel.availability_status == "available"
+            ConsultantModel.status == "AVAILABLE"
         ).all()
         return [await self._map_to_entity(consultant) for consultant in consultants]
     
@@ -211,8 +214,7 @@ class SQLAlchemyConsultantRepository(ConsultantRepository):
         consultants_query = self.db.query(ConsultantModel).join(
             UserModel, ConsultantModel.user_id == UserModel.id
         ).filter(
-            (UserModel.first_name.ilike(search)) |
-            (UserModel.last_name.ilike(search)) |
+            (UserModel.full_name.ilike(search)) |
             (ConsultantModel.title.ilike(search)) |
             (ConsultantModel.bio.ilike(search))
         )
@@ -223,7 +225,7 @@ class SQLAlchemyConsultantRepository(ConsultantRepository):
         
         # Filtrer par statut de disponibilité
         if availability_status:
-            consultants_query = consultants_query.filter(ConsultantModel.availability_status == availability_status)
+            consultants_query = consultants_query.filter(ConsultantModel.status == availability_status)
         
         # Filtrer par compétences
         if skills and len(skills) > 0:
@@ -268,29 +270,32 @@ class SQLAlchemyConsultantRepository(ConsultantRepository):
         if db_consultant.status:
             status_value = db_consultant.status.value
             # Mapping entre les valeurs d'enum
-            if status_value == "available":
+            if status_value == "AVAILABLE":
                 availability_status = AvailabilityStatus.AVAILABLE
-            elif status_value == "on_mission":
+            elif status_value == "ON_MISSION":
                 availability_status = AvailabilityStatus.ON_MISSION
-            elif status_value == "unavailable":
+            elif status_value == "UNAVAILABLE":
                 availability_status = AvailabilityStatus.UNAVAILABLE
 
+        # Créons l'entité consultant avec les champs qui existent vraiment
         return Consultant(
             id=db_consultant.id,
             user_id=db_consultant.user_id,
             company_id=db_consultant.company_id,
             title=db_consultant.title,
-            experience_years=db_consultant.years_experience,
-            availability_status=availability_status,
+            experience_years=db_consultant.years_experience,  # Mapping du champ years_experience -> experience_years
+            availability_status=availability_status,  # Statut déjà converti ci-dessus
             availability_date=db_consultant.availability_date,
             hourly_rate=db_consultant.hourly_rate,
             daily_rate=db_consultant.daily_rate,
             bio=db_consultant.bio,
-            location=getattr(db_consultant, 'location', None),  # Utilisation de getattr pour éviter les erreurs
-            remote_work=getattr(db_consultant, 'remote_work', False),
-            max_travel_distance=getattr(db_consultant, 'max_travel_distance', None),
+            # Les champs suivants ne sont pas dans le modèle, on utilise des valeurs par défaut
+            location=None,
+            remote_work=False,
+            max_travel_distance=None,
+            photo_url=db_consultant.photo_url,
             created_at=db_consultant.created_at,
-            updated_at=getattr(db_consultant, 'updated_at', None),
+            updated_at=db_consultant.updated_at if hasattr(db_consultant, 'updated_at') else None,
             user=user_data,
             skills=skills_data
         )

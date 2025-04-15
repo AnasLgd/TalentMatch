@@ -59,10 +59,10 @@ consultant_portfolios = Table(
 
 # Énumération des statuts possibles pour un Consultant
 class ConsultantStatus(enum.Enum):
-    AVAILABLE = "available"
-    MISSION = "on_mission"
-    UNAVAILABLE = "unavailable"
-    LEAVING = "leaving"
+    AVAILABLE = "AVAILABLE"
+    MISSION = "ON_MISSION"
+    UNAVAILABLE = "UNAVAILABLE"
+    LEAVING = "LEAVING"
 
 # Énumération des statuts possibles pour un Appel d'Offres
 class TenderStatus(enum.Enum):
@@ -146,7 +146,7 @@ class Consultant(Base):
     __tablename__ = "consultants"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=True)
     company_id = Column(Integer, ForeignKey("companies.id"))
     title = Column(String(255))
     bio = Column(Text)
@@ -158,6 +158,7 @@ class Consultant(Base):
     cv_url = Column(String(255))
     linkedin_url = Column(String(255))
     github_url = Column(String(255))
+    photo_url = Column(String(255))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     

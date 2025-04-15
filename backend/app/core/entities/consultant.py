@@ -1,18 +1,12 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
-from enum import Enum
-
-class AvailabilityStatus(str, Enum):
-    AVAILABLE = "available"
-    PARTIALLY_AVAILABLE = "partially_available"
-    UNAVAILABLE = "unavailable"
-    ON_MISSION = "on_mission"
+from app.core.entities.enums import AvailabilityStatus
 
 class ConsultantBase(BaseModel):
-    user_id: int
     company_id: int
     title: str
+    user_id: Optional[int] = None  # Rendu optionnel pour permettre la création de consultants sans utilisateur associé
     experience_years: Optional[int] = None
     availability_status: AvailabilityStatus = AvailabilityStatus.AVAILABLE
     availability_date: Optional[date] = None
@@ -22,8 +16,11 @@ class ConsultantBase(BaseModel):
     location: Optional[str] = None
     remote_work: Optional[bool] = False
     max_travel_distance: Optional[int] = None
-
+    photo_url: Optional[str] = None
 class ConsultantCreate(ConsultantBase):
+    skills: Optional[List[Dict[str, Any]]] = None
+    first_name: Optional[str] = None  # Prénom pour la mise à jour du nom d'utilisateur
+    last_name: Optional[str] = None   # Nom pour la mise à jour du nom d'utilisateur
     skills: Optional[List[Dict[str, Any]]] = None
 
 class ConsultantUpdate(BaseModel):

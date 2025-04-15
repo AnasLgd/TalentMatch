@@ -25,9 +25,20 @@ import {
 
 // Fonction utilitaire pour mapper la réponse du backend vers le format d'affichage
 const mapToConsultantDisplay = (consultant: Consultant): ConsultantDisplay => {
+  // Récupérer les informations de l'utilisateur
+  let userName = "Inconnu";
+  if (consultant.user) {
+    if (consultant.user.full_name) {
+      userName = consultant.user.full_name;
+    } else {
+      // Pour debugger, affichons les propriétés disponibles
+      console.log("User properties:", Object.keys(consultant.user));
+    }
+  }
+
   return {
     id: consultant.id,
-    name: consultant.user?.full_name || "Inconnu",
+    name: userName,
     role: consultant.title,
     experience: consultant.experience_years
       ? `${consultant.experience_years} ans`

@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from "react";
-import { 
-  Search, 
+import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Search,
   Plus, 
   Filter, 
-  ArrowUpDown, 
-  MoreVertical, 
-  Edit, 
-  Trash2, 
+  ArrowUpDown,
+  MoreVertical,
+  Edit,
+  Trash2,
   FileText,
-  Download 
+  Download,
+  Upload
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CreateConsultantModal } from "@/features/consultants/components/CreateConsultantModal";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -49,6 +52,7 @@ const getStatusColor = (status: string): string => {
 };
 
 const Consultants = () => {
+  const navigate = useNavigate();
   const {
     consultants,
     isLoading,
@@ -57,30 +61,25 @@ const Consultants = () => {
   } = useConsultants();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredConsultants, setFilteredConsultants] = useState<ConsultantDisplay[]>([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  // Initialiser les consultants filtrés quand les données sont chargées
-  useEffect(() => {
-    if (consultants) {
-      setFilteredConsultants(consultants);
-    }
-  }, [consultants]);
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const term = e.target.value.toLowerCase();
-    setSearchTerm(term);
-    
-    if (!consultants || term.trim() === "") {
-      setFilteredConsultants(consultants || []);
+  // Filtrer les consultants directement dans le rendu plutôt que dans un effet
+  const filteredConsultants = useMemo(() => {
+    if (!consultants || searchTerm.trim() === "") {
+      return consultants || [];
     } else {
-      const filtered = (consultants || []).filter(
+      const term = searchTerm.toLowerCase();
+      return consultants.filter(
         (consultant) =>
           consultant.name.toLowerCase().includes(term) ||
           consultant.role.toLowerCase().includes(term) ||
           consultant.skills.some((skill) => skill.name.toLowerCase().includes(term))
       );
-      setFilteredConsultants(filtered);
     }
+  }, [consultants, searchTerm]);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
   };
 
   return (
@@ -107,7 +106,14 @@ const Consultants = () => {
           <Button variant="outline" size="icon">
             <Filter className="h-4 w-4" />
           </Button>
-          <Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/cv-analysis')}
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Importer CV
+          </Button>
+          <Button onClick={() => setIsCreateModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Ajouter un consultant
           </Button>
@@ -220,6 +226,19 @@ const Consultants = () => {
           </div>
         </Card>
       )}
+      
+      {/* Modal de création de consultant */}
+      <CreateConsultantModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => {
+          // Fermer simplement le modal - useConsultants invalidera la requête automatiquement
+          setIsCreateModalOpen(false);
+          // Pas besoin de mettre à jour filteredConsultants ici, cela sera fait par l'useEffect
+        }}
+        // Note: Dans une application réelle, cette valeur viendrait d'un contexte d'authentification
+        companyId={1} // Entreprise actuelle simulée
+      />
     </div>
   );
 };

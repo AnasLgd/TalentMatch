@@ -65,20 +65,32 @@ class ConsultantUseCase:
     
     async def create_consultant(self, consultant_data: ConsultantCreate) -> Consultant:
         """Crée un nouveau consultant"""
-        # Vérifier que l'utilisateur existe
-        user = await self.user_repository.get_by_id(consultant_data.user_id)
-        if not user:
-            raise ValueError("L'utilisateur n'existe pas")
+        # Vérifier que l'utilisateur existe seulement si user_id est fourni
+        if consultant_data.user_id is not None:
+            user = await self.user_repository.get_by_id(consultant_data.user_id)
+            if not user:
+                raise ValueError("L'utilisateur n'existe pas")
         
         # Vérifier que l'entreprise existe
         company = await self.company_repository.get_by_id(consultant_data.company_id)
         if not company:
             raise ValueError("L'entreprise n'existe pas")
         
-        # Vérifier que l'utilisateur n'est pas déjà un consultant
-        existing_consultant = await self.consultant_repository.get_by_user_id(consultant_data.user_id)
-        if existing_consultant:
-            raise ValueError("Cet utilisateur est déjà un consultant")
+        # NOTE: Selon les spécifications (US1.1), il n'est pas nécessaire de vérifier si
+        # l'utilisateur est déjà consultant. Le manager d'ESN doit pouvoir créer
+        # directement un consultant sans cette restriction.
+        
+        # Mettre à jour le nom de l'utilisateur si les champs first_name et last_name sont fournis
+        if hasattr(consultant_data, 'first_name') and hasattr(consultant_data, 'last_name'):
+            if consultant_data.first_name and consultant_data.last_name:
+                # Créer un objet UserUpdate avec les nouveaux first_name et last_name
+                from app.core.entities.user import UserUpdate
+                user_update = UserUpdate(
+                    first_name=consultant_data.first_name,
+                    last_name=consultant_data.last_name
+                )
+                # Mettre à jour l'utilisateur
+                await self.user_repository.update(consultant_data.user_id, user_update)
         
         # Créer le consultant
         consultant = await self.consultant_repository.create(consultant_data)

@@ -4,6 +4,7 @@
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import { createApiError, ApiError } from './error-handler';
 
 // URL de base de l'API, définie dans le fichier .env
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
@@ -55,25 +56,34 @@ axiosInstance.interceptors.response.use(
         console.error('Accès non autorisé');
       }
 
-      // Erreur de validation
-      if (status === 422) {
-        console.error('Données invalides', error.response.data);
+      // Création d'une erreur enrichie avec notre système de gestion
+      const apiError = createApiError(error);
+      
+      // Envoi de logs au serveur pour les erreurs critiques (500, 502, 503)
+      if (status >= 500) {
+        // Dans un environnement réel, on pourrait envoyer les logs au serveur
+        // via une API dédiée, mais pour ce test nous utilisons la console
+        console.error('BACKEND_LOG:', {
+          statusCode: status,
+          errorType: apiError.errorType,
+          path: error.config?.url,
+          method: error.config?.method?.toUpperCase(),
+          timestamp: new Date().toISOString(),
+          requestId: error.config?.headers?.['X-Request-ID'] || 'unknown'
+        });
       }
 
-      // Erreur serveur
-      if (status >= 500) {
-        console.error('Erreur serveur', error.response.data);
-      }
+      // On rejette la promesse avec notre erreur enrichie
+      return Promise.reject(apiError);
     } else if (error.request) {
       // La requête a été envoyée mais aucune réponse n'a été reçue
-      console.error('Aucune réponse reçue du serveur', error.request);
+      const networkError = createApiError(error);
+      return Promise.reject(networkError);
     } else {
       // Une erreur est survenue lors de la configuration de la requête
-      console.error('Erreur de configuration de la requête', error.message);
+      const configError = createApiError(error);
+      return Promise.reject(configError);
     }
-
-    // On rejette la promesse pour que le code appelant puisse gérer l'erreur
-    return Promise.reject(error);
   }
 );
 
@@ -89,21 +99,21 @@ const apiClient = {
   /**
    * Méthode POST
    */
-  post: <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+  post: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> => {
     return axiosInstance.post(url, data, config);
   },
 
   /**
    * Méthode PUT
    */
-  put: <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+  put: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> => {
     return axiosInstance.put(url, data, config);
   },
 
   /**
    * Méthode PATCH
    */
-  patch: <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+  patch: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> => {
     return axiosInstance.patch(url, data, config);
   },
 

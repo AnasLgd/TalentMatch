@@ -4,10 +4,10 @@
  */
 
 export enum AvailabilityStatus {
-  AVAILABLE = "available",
-  PARTIALLY_AVAILABLE = "partially_available",
-  UNAVAILABLE = "unavailable",
-  ON_MISSION = "on_mission"
+  AVAILABLE = "AVAILABLE",
+  PARTIALLY_AVAILABLE = "PARTIALLY_AVAILABLE",
+  UNAVAILABLE = "UNAVAILABLE",
+  ON_MISSION = "ON_MISSION"
 }
 
 export interface Skill {
@@ -78,7 +78,7 @@ export interface ConsultantDisplay {
 }
 
 export interface ConsultantCreate {
-  user_id: number;
+  user_id?: number; // Rendu optionnel pour permettre la création de consultants sans utilisateur associé
   company_id: number;
   title: string;
   experience_years?: number;
@@ -91,6 +91,9 @@ export interface ConsultantCreate {
   remote_work?: boolean;
   max_travel_distance?: number;
   skills?: Skill[];
+  photo_url?: string; // URL de la photo de profil
+  first_name?: string; // Prénom de l'utilisateur à mettre à jour
+  last_name?: string; // Nom de l'utilisateur à mettre à jour
 }
 
 export interface ConsultantUpdate {

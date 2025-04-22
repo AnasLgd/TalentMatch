@@ -129,7 +129,8 @@ const Consultants = () => {
       )}
       
       {!isLoading && !isError && (
-        <div className="space-y-12">
+        // Grille 2x2 pour desktop, colonne unique pour mobile
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Section title="Candidats en cours de process">
             <ConsultantTable consultants={processCandidates} />
           </Section>

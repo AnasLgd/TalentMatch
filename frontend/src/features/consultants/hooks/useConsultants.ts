@@ -1,180 +1,105 @@
-/**
- * Hook React pour la gestion des consultants
- * Utilise React Query pour la gestion des états et du cache
- */
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { consultantService } from "../services/consultant-service";
+import { ConsultantCreate, ConsultantDisplay, ConsultantUpdate, Consultant } from "../types";
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { consultantService } from '../services/consultant-service';
-import { ConsultantFilters, ConsultantCreate, ConsultantUpdate, ConsultantDisplay } from '../types';
-import { toast } from '@/hooks/use-toast';
-import { ApiError } from '@/lib/api/error-handler';
-import { ErrorType } from '@/components/common/GlobalError';
-
-export function useConsultants(filters?: ConsultantFilters) {
+export const useConsultants = () => {
   const queryClient = useQueryClient();
-  
-  // Clé de requête qui inclut les filtres
-  const queryKey = ['consultants', filters];
-  
-  // Requête pour récupérer les consultants
-  const consultantsQuery = useQuery({
-    queryKey,
-    queryFn: () => {
-      console.log('[useConsultants] Démarrage de la requête avec filtres:', filters);
-      return consultantService.getConsultants(filters)
-        .then(data => {
-          console.log('[useConsultants] Données récupérées:', data);
-          return data;
-        })
-        .catch(error => {
-          console.error('[useConsultants] Erreur API:', error);
-          throw error;
-        });
-    },
+  const [isFiltering, setIsFiltering] = useState(false);
+
+  // Récupérer tous les consultants
+  const {
+    data: consultants,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["consultants"],
+    queryFn: () => consultantService.getConsultants(),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1 // Limiter le nombre de tentatives pour éviter trop d'appels en cas d'erreur
   });
-  
-  // Mutation pour créer un consultant
-  const createConsultantMutation = useMutation({
-    mutationFn: (newConsultant: ConsultantCreate) => 
-      consultantService.createConsultant(newConsultant),
-    onSuccess: () => {
-      // Invalider la requête des consultants pour forcer un rechargement
-      queryClient.invalidateQueries({ queryKey: ['consultants'] });
-      toast({
-        title: 'Consultant créé',
-        description: 'Le consultant a été créé avec succès',
-        variant: 'default',
-      });
-    },
-    onError: (error: unknown) => {
-      // Gestion spécifique des erreurs selon le type
-      const apiError = error as ApiError;
+
+  // Créer un consultant
+  const {
+    mutate: createConsultant,
+    isPending: isCreating,
+    error: createError,
+  } = useMutation({
+    mutationFn: (newConsultant: ConsultantCreate) => consultantService.createConsultant(newConsultant),
+    onSuccess: (newConsultant) => {
+      // Mise à jour du cache pour ajouter le nouveau consultant
+      queryClient.setQueryData(
+        ["consultants"],
+        (oldData: ConsultantDisplay[] = []) => [...oldData, newConsultant]
+      );
       
-      // Message d'erreur spécifique au code HTTP
-      let title = 'Erreur';
-      let description = 'Une erreur est survenue lors de la création du consultant';
-      
-      // Utiliser le système d'erreur centralisé pour mapper les erreurs
-      if (apiError.errorType) {
-        switch (apiError.errorType) {
-          case ErrorType.UNEXPECTED:
-            title = 'Erreur inattendue';
-            description = 'Une erreur inattendue est survenue. Veuillez réessayer.';
-            break;
-          case ErrorType.SERVICE_UNAVAILABLE:
-            title = 'Service indisponible';
-            description = 'Service temporairement indisponible. Merci de réessayer.';
-            break;
-          case ErrorType.MAINTENANCE:
-            title = 'Maintenance en cours';
-            description = 'Le service est en maintenance. Veuillez patienter.';
-            break;
-          case ErrorType.VALIDATION:
-            title = 'Données invalides';
-            description = 'Veuillez vérifier les informations saisies et réessayer.';
-            break;
-          default:
-            // Utiliser les valeurs par défaut
-        }
-      }
-      
-      toast({
-        title,
-        description,
-        variant: 'destructive',
-      });
-      
-      // Si nous sommes en développement, afficher l'erreur complète dans la console
-      if (import.meta.env.DEV) {
-        console.error('[useConsultants] Erreur détaillée:', apiError);
-      }
-    },
-  });
-  
-  // Mutation pour mettre à jour un consultant
-  const updateConsultantMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: ConsultantUpdate }) => 
-      consultantService.updateConsultant(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['consultants'] });
-      toast({
-        title: 'Consultant mis à jour',
-        description: 'Le consultant a été mis à jour avec succès',
-        variant: 'default',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Erreur',
-        description: `Erreur lors de la mise à jour du consultant: ${error}`,
-        variant: 'destructive',
+      // Invalider la requête pour forcer un rechargement et assurer que
+      // les données sont à jour avec le backend
+      queryClient.invalidateQueries({
+        queryKey: ["consultants"]
       });
     },
   });
-  
-  // Mutation pour supprimer un consultant
-  const deleteConsultantMutation = useMutation({
+
+  // Mise à jour d'un consultant
+  const {
+    mutate: updateConsultant,
+    isPending: isUpdating,
+    error: updateError,
+  } = useMutation({
+    mutationFn: ({ id, consultant }: { id: number; consultant: ConsultantUpdate }) =>
+      consultantService.updateConsultant(id, consultant),
+    onSuccess: (updatedConsultant) => {
+      // Mettre à jour le cache avec le consultant mis à jour
+      queryClient.setQueryData(
+        ["consultants"],
+        (oldData: ConsultantDisplay[] = []) =>
+          oldData.map((c) =>
+            c.id === updatedConsultant.id ? updatedConsultant : c
+          )
+      );
+      
+      // Invalidation du cache pour le consultant spécifique
+      queryClient.invalidateQueries({
+        queryKey: ["consultant", updatedConsultant.id]
+      });
+    },
+  });
+
+  // Suppression d'un consultant
+  const {
+    mutate: deleteConsultant,
+    isPending: isDeleting,
+    error: deleteError,
+  } = useMutation({
     mutationFn: (id: number) => consultantService.deleteConsultant(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['consultants'] });
-      toast({
-        title: 'Consultant supprimé',
-        description: 'Le consultant a été supprimé avec succès',
-        variant: 'default',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Erreur',
-        description: `Erreur lors de la suppression du consultant: ${error}`,
-        variant: 'destructive',
-      });
+    onSuccess: (_, variables) => {
+      // Mettre à jour le cache en supprimant le consultant
+      queryClient.setQueryData(
+        ["consultants"],
+        (oldData: ConsultantDisplay[] = []) =>
+          oldData.filter((c) => c.id !== variables)
+      );
     },
   });
-  
-  // Hook pour récupérer un consultant spécifique
-  const useConsultant = (id: number) => {
-    return useQuery({
-      queryKey: ['consultant', id],
-      queryFn: () => {
-        console.log(`[useConsultant] Récupération du consultant ID: ${id}`);
-        return consultantService.getConsultantById(id)
-          .then(data => {
-            console.log(`[useConsultant] Données du consultant ${id} récupérées:`, data);
-            return data;
-          })
-          .catch(error => {
-            console.error(`[useConsultant] Erreur lors de la récupération du consultant ${id}:`, error);
-            throw error;
-          });
-      },
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    });
-  };
-  
+
   return {
-    // Données et états pour la liste des consultants
-    consultants: consultantsQuery.data || [],
-    isLoading: consultantsQuery.isLoading,
-    isError: consultantsQuery.isError,
-    error: consultantsQuery.error,
-    
-    // Fonctions de mutation
-    createConsultant: createConsultantMutation.mutate,
-    isCreating: createConsultantMutation.isPending,
-    
-    updateConsultant: updateConsultantMutation.mutate,
-    isUpdating: updateConsultantMutation.isPending,
-    
-    deleteConsultant: deleteConsultantMutation.mutate,
-    isDeleting: deleteConsultantMutation.isPending,
-    
-    // Hook pour un consultant spécifique
-    useConsultant,
-    
-    // Fonction de rafraîchissement manuel
-    refetch: consultantsQuery.refetch,
+    consultants,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    createConsultant,
+    isCreating,
+    createError,
+    updateConsultant,
+    isUpdating,
+    updateError,
+    deleteConsultant,
+    isDeleting,
+    deleteError,
+    isFiltering,
+    setIsFiltering,
   };
-}
+};

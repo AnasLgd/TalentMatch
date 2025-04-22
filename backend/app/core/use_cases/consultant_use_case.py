@@ -81,8 +81,9 @@ class ConsultantUseCase:
         # directement un consultant sans cette restriction.
         
         # Mettre à jour le nom de l'utilisateur si les champs first_name et last_name sont fournis
+        # et si un user_id est associé
         if hasattr(consultant_data, 'first_name') and hasattr(consultant_data, 'last_name'):
-            if consultant_data.first_name and consultant_data.last_name:
+            if consultant_data.first_name and consultant_data.last_name and consultant_data.user_id:
                 # Créer un objet UserUpdate avec les nouveaux first_name et last_name
                 from app.core.entities.user import UserUpdate
                 user_update = UserUpdate(
@@ -91,6 +92,10 @@ class ConsultantUseCase:
                 )
                 # Mettre à jour l'utilisateur
                 await self.user_repository.update(consultant_data.user_id, user_update)
+            
+            # Note: Les champs first_name et last_name seront également persistés
+            # directement dans le modèle Consultant par le repository, qu'il y ait
+            # un utilisateur associé ou non.
         
         # Créer le consultant
         consultant = await self.consultant_repository.create(consultant_data)

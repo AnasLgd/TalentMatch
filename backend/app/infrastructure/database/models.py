@@ -59,8 +59,12 @@ consultant_portfolios = Table(
 
 # Énumération des statuts possibles pour un Consultant
 class ConsultantStatus(enum.Enum):
+    PROCESS = "PROCESS"      # Candidats en cours de process
+    QUALIFIED = "QUALIFIED"  # Candidats qualifiés (vivier)
+    MISSION = "MISSION"      # Consultants en mission
+    INTERCO = "INTERCO"      # Consultants en intercontrat
+    # Statuts legacy conservés pour la compatibilité
     AVAILABLE = "AVAILABLE"
-    MISSION = "ON_MISSION"
     UNAVAILABLE = "UNAVAILABLE"
     LEAVING = "LEAVING"
 
@@ -148,6 +152,8 @@ class Consultant(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=True)
     company_id = Column(Integer, ForeignKey("companies.id"))
+    first_name = Column(String(255))  # Ajout du prénom pour les consultants sans utilisateur
+    last_name = Column(String(255))   # Ajout du nom pour les consultants sans utilisateur
     title = Column(String(255))
     bio = Column(Text)
     years_experience = Column(Integer, default=0)

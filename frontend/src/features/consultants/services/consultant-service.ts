@@ -27,13 +27,16 @@ import {
 const mapToConsultantDisplay = (consultant: Consultant): ConsultantDisplay => {
   // Récupérer les informations de l'utilisateur
   let userName = "Inconnu";
-  if (consultant.user) {
-    if (consultant.user.full_name) {
-      userName = consultant.user.full_name;
-    } else {
-      // Pour debugger, affichons les propriétés disponibles
-      console.log("User properties:", Object.keys(consultant.user));
-    }
+  
+  // Utiliser les informations de l'utilisateur si disponibles
+  if (consultant.user && consultant.user.full_name) {
+    userName = consultant.user.full_name;
+  }
+
+  // Former manuellement le nom pour les consultants sans utilisateur
+  // en utilisant first_name et last_name (lors de la création uniquement)
+  if (consultant.first_name && consultant.last_name) {
+    userName = `${consultant.first_name} ${consultant.last_name}`;
   }
 
   return {
@@ -53,6 +56,17 @@ const mapToConsultantDisplay = (consultant: Consultant): ConsultantDisplay => {
 // Fonction utilitaire pour traduire le statut en français pour l'affichage
 const mapAvailabilityStatusToDisplay = (status: AvailabilityStatus): string => {
   switch (status) {
+    // Nouveaux statuts
+    case AvailabilityStatus.PROCESS:
+      return "En cours de process";
+    case AvailabilityStatus.QUALIFIED:
+      return "Qualifié";
+    case AvailabilityStatus.MISSION:
+      return "En mission";
+    case AvailabilityStatus.INTERCO:
+      return "Intercontrat";
+    
+    // Statuts legacy
     case AvailabilityStatus.AVAILABLE:
       return "Disponible";
     case AvailabilityStatus.PARTIALLY_AVAILABLE:
@@ -148,13 +162,21 @@ export const consultantService = {
    * Crée un nouveau consultant
    */
   async createConsultant(
-    consultant: ConsultantCreate
+    consultantData: ConsultantCreate
   ): Promise<ConsultantDisplay> {
     try {
       const newConsultant = await apiClient.post<Consultant>(
         "/consultants",
-        consultant
+        consultantData
       );
+      
+      // Pour résoudre le problème d'affichage immédiat, on conserve manuellement
+      // les valeurs first_name et last_name dans l'objet retourné
+      if (consultantData.first_name && consultantData.last_name) {
+        newConsultant.first_name = consultantData.first_name;
+        newConsultant.last_name = consultantData.last_name;
+      }
+      
       return mapToConsultantDisplay(newConsultant);
     } catch (error) {
       console.error("Erreur lors de la création du consultant:", error);

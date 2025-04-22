@@ -7,6 +7,8 @@ class ConsultantBase(BaseModel):
     company_id: int
     title: str
     user_id: Optional[int] = None  # Rendu optionnel pour permettre la création de consultants sans utilisateur associé
+    first_name: Optional[str] = None  # Prénom du consultant
+    last_name: Optional[str] = None  # Nom du consultant
     experience_years: Optional[int] = None
     availability_status: AvailabilityStatus = AvailabilityStatus.AVAILABLE
     availability_date: Optional[date] = None
@@ -19,9 +21,7 @@ class ConsultantBase(BaseModel):
     photo_url: Optional[str] = None
 class ConsultantCreate(ConsultantBase):
     skills: Optional[List[Dict[str, Any]]] = None
-    first_name: Optional[str] = None  # Prénom pour la mise à jour du nom d'utilisateur
-    last_name: Optional[str] = None   # Nom pour la mise à jour du nom d'utilisateur
-    skills: Optional[List[Dict[str, Any]]] = None
+    # Note: first_name et last_name sont déjà définis dans ConsultantBase
 
 class ConsultantUpdate(BaseModel):
     title: Optional[str] = None
@@ -60,6 +60,8 @@ class ConsultantResponse(Consultant):
                 "id": 1,
                 "user_id": 2,
                 "company_id": 3,
+                "first_name": "John",
+                "last_name": "Doe",
                 "title": "Ingénieur Logiciel Senior",
                 "experience_years": 8,
                 "availability_status": "available",

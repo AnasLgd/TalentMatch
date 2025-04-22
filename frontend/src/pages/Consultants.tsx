@@ -1,55 +1,18 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
-  Plus, 
-  Filter, 
-  ArrowUpDown,
-  MoreVertical,
-  Edit,
-  Trash2,
-  FileText,
-  Download,
+  Plus,
+  Filter,
   Upload
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CreateConsultantModal } from "@/features/consultants/components/CreateConsultantModal";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { useConsultants } from "@/features/consultants/hooks/useConsultants";
-import { ConsultantDisplay } from "@/features/consultants/types";
-
-// Fonction utilitaire pour déterminer la couleur du badge de statut
-const getStatusColor = (status: string): string => {
-  switch (status) {
-    case "Disponible":
-      return "bg-green-100 text-green-800";
-    case "Partiellement disponible":
-      return "bg-blue-100 text-blue-800";
-    case "En mission":
-      return "bg-amber-100 text-amber-800";
-    case "Indisponible":
-      return "bg-red-100 text-red-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
+import { ConsultantDisplay, AvailabilityStatus } from "@/features/consultants/types";
+import { Section } from "@/features/consultants/components/Section";
+import { ConsultantTable } from "@/features/consultants/components/ConsultantTable";
 
 const Consultants = () => {
   const navigate = useNavigate();
@@ -77,6 +40,31 @@ const Consultants = () => {
       );
     }
   }, [consultants, searchTerm]);
+
+  // Séparer les consultants en 4 groupes selon leur statut
+  const processCandidates = useMemo(() => {
+    return filteredConsultants.filter(c => c.status === "En cours de process");
+  }, [filteredConsultants]);
+
+  const qualifiedConsultants = useMemo(() => {
+    return filteredConsultants.filter(c =>
+      c.status === "Qualifié" ||
+      c.status === "Disponible" ||
+      c.status === "Partiellement disponible" ||
+      c.status === "Indisponible"
+    );
+  }, [filteredConsultants]);
+
+  const onMissionConsultants = useMemo(() => {
+    return filteredConsultants.filter(c =>
+      c.status === "En mission" ||
+      c.status === "Mission"
+    );
+  }, [filteredConsultants]);
+
+  const intercontractConsultants = useMemo(() => {
+    return filteredConsultants.filter(c => c.status === "Intercontrat");
+  }, [filteredConsultants]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -115,7 +103,7 @@ const Consultants = () => {
           </Button>
           <Button onClick={() => setIsCreateModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Ajouter un consultant
+            Ajouter un Talent
           </Button>
         </div>
       </div>
@@ -141,90 +129,23 @@ const Consultants = () => {
       )}
       
       {!isLoading && !isError && (
-        <Card className="border-border/40">
-          <div className="relative w-full overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[300px]">
-                    <div className="flex items-center">
-                      Nom
-                      <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </div>
-                  </TableHead>
-                  <TableHead>
-                    <div className="flex items-center">
-                      Rôle
-                      <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </div>
-                  </TableHead>
-                  <TableHead>Expérience</TableHead>
-                  <TableHead>Compétences</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredConsultants.map((consultant) => (
-                  <TableRow key={consultant.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                          <span className="text-xs">
-                            {consultant.name.split(" ").map(n => n[0]).join("")}
-                          </span>
-                        </div>
-                        <span>{consultant.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{consultant.role}</TableCell>
-                    <TableCell>{consultant.experience}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {consultant.skills.map((skill, idx) => (
-                          <Badge key={idx} variant="secondary">{skill.name}</Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className={`inline-flex rounded-full px-2 py-1 text-xs ${getStatusColor(consultant.status)}`}>
-                        {consultant.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <FileText className="mr-2 h-4 w-4" />
-                            <span>Voir profil</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            <span>Modifier</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Download className="mr-2 h-4 w-4" />
-                            <span>Exporter CV</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-500">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Supprimer</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </Card>
+        <div className="space-y-12">
+          <Section title="Candidats en cours de process">
+            <ConsultantTable consultants={processCandidates} />
+          </Section>
+          
+          <Section title="Candidats qualifiés (Vivier de consultants)">
+            <ConsultantTable consultants={qualifiedConsultants} />
+          </Section>
+          
+          <Section title="Consultants en mission">
+            <ConsultantTable consultants={onMissionConsultants} />
+          </Section>
+          
+          <Section title="Consultants en intercontrat">
+            <ConsultantTable consultants={intercontractConsultants} />
+          </Section>
+        </div>
       )}
       
       {/* Modal de création de consultant */}

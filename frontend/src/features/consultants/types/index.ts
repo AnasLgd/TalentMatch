@@ -4,6 +4,11 @@
  */
 
 export enum AvailabilityStatus {
+  PROCESS = "PROCESS",      // Candidats en cours de process
+  QUALIFIED = "QUALIFIED",  // Candidats qualifiés (vivier)
+  MISSION = "MISSION",      // Consultants en mission
+  INTERCO = "INTERCO",      // Consultants en intercontrat
+  // Statuts legacy conservés pour la compatibilité
   AVAILABLE = "AVAILABLE",
   PARTIALLY_AVAILABLE = "PARTIALLY_AVAILABLE",
   UNAVAILABLE = "UNAVAILABLE",
@@ -59,6 +64,9 @@ export interface Consultant {
   skills: Skill[];
   created_at: string;
   updated_at?: string;
+  // Champs supplémentaires pour l'affichage des consultants sans utilisateur
+  first_name?: string;
+  last_name?: string;
 }
 
 // Pour la compatibilité avec l'interface existante

@@ -66,6 +66,9 @@ class SQLAlchemyConsultantRepository(ConsultantRepository):
                 daily_rate=consultant.daily_rate,
                 bio=consultant.bio,
                 photo_url=consultant.photo_url,
+                # Ajout des champs pour le nom et prénom
+                first_name=consultant.first_name,
+                last_name=consultant.last_name,
                 # Les champs suivants ne sont pas dans le modèle de base de données
                 # location=consultant.location,
                 # remote_work=consultant.remote_work,
@@ -278,6 +281,18 @@ class SQLAlchemyConsultantRepository(ConsultantRepository):
                 availability_status = AvailabilityStatus.UNAVAILABLE
 
         # Créons l'entité consultant avec les champs qui existent vraiment
+        # Priorité aux champs first_name et last_name du modèle consultant, sinon ceux de l'utilisateur
+        first_name = db_consultant.first_name
+        last_name = db_consultant.last_name
+        
+        # Si le consultant n'a pas de nom/prénom mais a un utilisateur associé,
+        # on récupère depuis l'utilisateur (rétrocompatibilité)
+        if user and (not first_name or not last_name):
+            if not first_name and hasattr(user, 'first_name'):
+                first_name = user.first_name
+            if not last_name and hasattr(user, 'last_name'):
+                last_name = user.last_name
+        
         return Consultant(
             id=db_consultant.id,
             user_id=db_consultant.user_id,
@@ -289,6 +304,9 @@ class SQLAlchemyConsultantRepository(ConsultantRepository):
             hourly_rate=db_consultant.hourly_rate,
             daily_rate=db_consultant.daily_rate,
             bio=db_consultant.bio,
+            # Ajout des champs first_name et last_name
+            first_name=first_name,
+            last_name=last_name,
             # Les champs suivants ne sont pas dans le modèle, on utilise des valeurs par défaut
             location=None,
             remote_work=False,

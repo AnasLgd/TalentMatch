@@ -1,6 +1,6 @@
 """Add first_name and last_name to consultants
 
-Revision ID: 007
+Revision ID: 007_add_first_last_name_to_consultants
 Revises: 006_make_consultant_user_id_nullable
 Create Date: 2025-04-15
 
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = '007'
-down_revision = '006'  # Corrigé: utiliser uniquement l'ID de révision, pas le nom du fichier
+revision = '007_add_first_last_name_to_consultants'
+down_revision = '006_make_consultant_user_id_nullable'  # Corrigé: utiliser uniquement l'ID de révision, pas le nom du fichier
 branch_labels = None
 depends_on = None
 

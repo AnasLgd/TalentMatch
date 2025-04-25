@@ -1,6 +1,6 @@
 """Make consultant user_id nullable
 
-Revision ID: 006
+Revision ID: 006_make_consultant_user_id_nullable
 Revises: 005_add_photo_url_to_consultant
 Create Date: 2025-04-15 11:25:00
 
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = '006'
-down_revision = '005'  # Correction: le format de la révision précédente est juste le numéro
+revision = '006_make_consultant_user_id_nullable'
+down_revision = '005_add_photo_url_to_consultant'  # Correction: le format de la révision précédente est juste le numéro
 branch_labels = None
 depends_on = None
 

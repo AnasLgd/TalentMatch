@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Bell,
   Search,
@@ -17,7 +16,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ThemeSwitcher from "@/components/ui/theme-switcher";
-import { initializeTheme } from "@/lib/themes";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -31,11 +29,6 @@ import { NavLink } from "react-router-dom";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
-  
-  // Initialiser le thème au chargement du composant
-  useEffect(() => {
-    initializeTheme();
-  }, []);
   
   const menuItems = [
     { name: "Tableau de bord", icon: BarChart3, path: "/dashboard" },

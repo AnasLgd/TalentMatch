@@ -4,15 +4,11 @@
  */
 
 export enum AvailabilityStatus {
-  PROCESS = "PROCESS",      // Candidats en cours de process
-  QUALIFIED = "QUALIFIED",  // Candidats qualifiés (vivier)
-  MISSION = "MISSION",      // Consultants en mission
-  INTERCO = "INTERCO",      // Consultants en intercontrat
-  // Statuts legacy conservés pour la compatibilité
-  AVAILABLE = "AVAILABLE",
-  PARTIALLY_AVAILABLE = "PARTIALLY_AVAILABLE",
-  UNAVAILABLE = "UNAVAILABLE",
-  ON_MISSION = "ON_MISSION"
+  SOURCED = "SOURCED",      // Talent en cours de création ou qualification initiale
+  QUALIFIED = "QUALIFIED",  // Consultant qualifié, disponible dans le vivier
+  MISSION = "MISSION",      // Consultant actuellement en mission
+  INTERCO = "INTERCO",      // Consultant en période d'intercontrat
+  ARCHIVED = "ARCHIVED"     // Consultant archivé (ex-LEAVING)
 }
 
 export interface Skill {

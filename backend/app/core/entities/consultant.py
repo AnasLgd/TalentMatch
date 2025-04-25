@@ -10,7 +10,7 @@ class ConsultantBase(BaseModel):
     first_name: Optional[str] = None  # Prénom du consultant
     last_name: Optional[str] = None  # Nom du consultant
     experience_years: Optional[int] = None
-    availability_status: AvailabilityStatus = AvailabilityStatus.AVAILABLE
+    availability_status: AvailabilityStatus = AvailabilityStatus.SOURCED
     availability_date: Optional[date] = None
     hourly_rate: Optional[float] = None
     daily_rate: Optional[float] = None

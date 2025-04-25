@@ -47,34 +47,37 @@ const mapToConsultantDisplay = (consultant: Consultant): ConsultantDisplay => {
       ? `${consultant.experience_years} ans`
       : "Non spécifié",
     skills: consultant.skills || [],
-    status: mapAvailabilityStatusToDisplay(consultant.availability_status),
+    status: mapAvailabilityStatusToDisplay(consultant.availability_status, consultant.availability_date),
     email: consultant.user?.email,
     availabilityDate: consultant.availability_date,
   };
 };
 
 // Fonction utilitaire pour traduire le statut en français pour l'affichage
-const mapAvailabilityStatusToDisplay = (status: AvailabilityStatus): string => {
+const mapAvailabilityStatusToDisplay = (status: AvailabilityStatus, availabilityDate?: string): string => {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0); // Réinitialiser à minuit pour comparer les dates
+  const isAvailable = availabilityDate ? new Date(availabilityDate) <= now : false;
+  
   switch (status) {
-    // Nouveaux statuts
-    case AvailabilityStatus.PROCESS:
-      return "En cours de process";
+    case AvailabilityStatus.SOURCED:
+      return "En création";
     case AvailabilityStatus.QUALIFIED:
-      return "Qualifié";
+      if (availabilityDate) {
+        if (isAvailable) {
+          return "Disponible"; // Consultant qualifié et disponible immédiatement
+        } else {
+          // Consultant qualifié avec disponibilité future
+          return "Bientôt disponible";
+        }
+      }
+      return "Qualifié"; // Qualifié sans date de disponibilité spécifiée
     case AvailabilityStatus.MISSION:
       return "En mission";
     case AvailabilityStatus.INTERCO:
       return "Intercontrat";
-    
-    // Statuts legacy
-    case AvailabilityStatus.AVAILABLE:
-      return "Disponible";
-    case AvailabilityStatus.PARTIALLY_AVAILABLE:
-      return "Partiellement disponible";
-    case AvailabilityStatus.UNAVAILABLE:
-      return "Indisponible";
-    case AvailabilityStatus.ON_MISSION:
-      return "En mission";
+    case AvailabilityStatus.ARCHIVED:
+      return "Archivé";
     default:
       return "Statut inconnu";
   }

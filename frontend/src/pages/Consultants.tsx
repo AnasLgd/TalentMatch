@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CreateConsultantModal } from "@/features/consultants/components/CreateConsultantModal";
 import { useConsultants } from "@/features/consultants/hooks/useConsultants";
 import { ConsultantDisplay, AvailabilityStatus } from "@/features/consultants/types";
 import { Section } from "@/features/consultants/components/Section";
@@ -24,7 +23,6 @@ const Consultants = () => {
   } = useConsultants();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Filtrer les consultants directement dans le rendu plutôt que dans un effet
   const filteredConsultants = useMemo(() => {
@@ -41,25 +39,40 @@ const Consultants = () => {
     }
   }, [consultants, searchTerm]);
 
-  // Séparer les consultants en 4 groupes selon leur statut
+  // Séparer les consultants en 4 groupes selon leur statut - Adapté aux nouveaux statuts
   const processCandidates = useMemo(() => {
-    return filteredConsultants.filter(c => c.status === "En cours de process");
+    return filteredConsultants.filter(c =>
+      c.status === "En création" ||
+      c.status === "En cours de process"
+    );
   }, [filteredConsultants]);
 
+  // Liste des consultants qualifiés triés par disponibilité
   const qualifiedConsultants = useMemo(() => {
-    return filteredConsultants.filter(c =>
+    // Filtrer tous les consultants qualifiés
+    const qualified = filteredConsultants.filter(c =>
       c.status === "Qualifié" ||
-      c.status === "Disponible" ||
-      c.status === "Partiellement disponible" ||
-      c.status === "Indisponible"
+      c.status === "Qualifié - Disponible" ||
+      c.status === "Bientôt disponible" ||
+      c.status === "Disponible"
     );
+    
+    // Trier selon la date de disponibilité (croissante)
+    return qualified.sort((a, b) => {
+      // Si les deux n'ont pas de date, pas de tri spécifique
+      if (!a.availabilityDate && !b.availabilityDate) return 0;
+      
+      // Si l'un n'a pas de date, il va en dernier
+      if (!a.availabilityDate) return 1;
+      if (!b.availabilityDate) return -1;
+      
+      // Tri par date croissante pour voir les prochains disponibles en premier
+      return new Date(a.availabilityDate).getTime() - new Date(b.availabilityDate).getTime();
+    });
   }, [filteredConsultants]);
 
   const onMissionConsultants = useMemo(() => {
-    return filteredConsultants.filter(c =>
-      c.status === "En mission" ||
-      c.status === "Mission"
-    );
+    return filteredConsultants.filter(c => c.status === "En mission");
   }, [filteredConsultants]);
 
   const intercontractConsultants = useMemo(() => {
@@ -101,7 +114,7 @@ const Consultants = () => {
             <Upload className="mr-2 h-4 w-4" />
             Importer CV
           </Button>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
+          <Button onClick={() => navigate("/consultants/create")}>
             <Plus className="mr-2 h-4 w-4" />
             Ajouter un Talent
           </Button>
@@ -131,36 +144,36 @@ const Consultants = () => {
       {!isLoading && !isError && (
         // Grille 2x2 pour desktop, colonne unique pour mobile
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Section title="Candidats en cours de process">
+          <Section
+            title="Candidats en cours de process"
+            count={processCandidates.length}
+          >
             <ConsultantTable consultants={processCandidates} />
           </Section>
           
-          <Section title="Candidats qualifiés (Vivier de consultants)">
+          <Section
+            title="Candidats qualifiés (Vivier de consultants)"
+            count={qualifiedConsultants.length}
+          >
             <ConsultantTable consultants={qualifiedConsultants} />
           </Section>
           
-          <Section title="Consultants en mission">
+          <Section
+            title="Consultants en mission"
+            count={onMissionConsultants.length}
+          >
             <ConsultantTable consultants={onMissionConsultants} />
           </Section>
           
-          <Section title="Consultants en intercontrat">
+          <Section
+            title="Consultants en intercontrat"
+            count={intercontractConsultants.length}
+          >
             <ConsultantTable consultants={intercontractConsultants} />
           </Section>
         </div>
       )}
       
-      {/* Modal de création de consultant */}
-      <CreateConsultantModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={() => {
-          // Fermer simplement le modal - useConsultants invalidera la requête automatiquement
-          setIsCreateModalOpen(false);
-          // Pas besoin de mettre à jour filteredConsultants ici, cela sera fait par l'useEffect
-        }}
-        // Note: Dans une application réelle, cette valeur viendrait d'un contexte d'authentification
-        companyId={1} // Entreprise actuelle simulée
-      />
     </div>
   );
 };

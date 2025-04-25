@@ -2,6 +2,7 @@ from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
+from datetime import datetime
 
 from app.core.interfaces.consultant_repository import ConsultantRepository
 from app.core.entities.consultant import Consultant, ConsultantCreate, ConsultantUpdate, AvailabilityStatus
@@ -201,11 +202,22 @@ class SQLAlchemyConsultantRepository(ConsultantRepository):
         return True
     
     async def get_available_consultants(self) -> List[Consultant]:
-        """Récupère les consultants disponibles"""
+        """Récupère les consultants qualifiés et disponibles"""
+        # Récupère les consultants avec statut QUALIFIED
         consultants = self.db.query(ConsultantModel).filter(
-            ConsultantModel.status == "AVAILABLE"
+            ConsultantModel.status == "QUALIFIED"
         ).all()
-        return [await self._map_to_entity(consultant) for consultant in consultants]
+        
+        # Convertit en entités et filtre ceux qui sont réellement disponibles
+        # basé sur leur date de disponibilité
+        available_consultants = []
+        for consultant in consultants:
+            entity = await self._map_to_entity(consultant)
+            # Un consultant est disponible si sa date de disponibilité est passée ou non définie
+            if not entity.availability_date or entity.availability_date <= datetime.now().date():
+                available_consultants.append(entity)
+                
+        return available_consultants
     
     async def search_consultants(self, query: str, skills: Optional[List[int]] = None, 
                                company_id: Optional[int] = None, 
@@ -268,17 +280,24 @@ class SQLAlchemyConsultantRepository(ConsultantRepository):
                 }
                 skills_data.append(skill_data)
         
-        # Conversion de l'enum status vers availability_status
-        availability_status = AvailabilityStatus.AVAILABLE
+        # Conversion directe de l'enum status vers availability_status
+        # Les valeurs d'enum sont maintenant identiques entre le modèle et l'entité
+        availability_status = AvailabilityStatus.SOURCED  # Valeur par défaut
         if db_consultant.status:
             status_value = db_consultant.status.value
-            # Mapping entre les valeurs d'enum
-            if status_value == "AVAILABLE":
-                availability_status = AvailabilityStatus.AVAILABLE
-            elif status_value == "ON_MISSION":
-                availability_status = AvailabilityStatus.ON_MISSION
-            elif status_value == "UNAVAILABLE":
-                availability_status = AvailabilityStatus.UNAVAILABLE
+            try:
+                # Essai de conversion directe (cas idéal pour les 5 statuts standardisés)
+                availability_status = AvailabilityStatus(status_value)
+            except ValueError:
+                # Gestion de la compatibilité avec les anciens statuts legacy (pour la période de transition)
+                if status_value == "AVAILABLE" or status_value == "PARTIALLY_AVAILABLE" or status_value == "UNAVAILABLE":
+                    availability_status = AvailabilityStatus.QUALIFIED
+                elif status_value == "ON_MISSION":
+                    availability_status = AvailabilityStatus.MISSION
+                elif status_value == "LEAVING":
+                    availability_status = AvailabilityStatus.ARCHIVED
+                elif status_value == "PROCESS":
+                    availability_status = AvailabilityStatus.SOURCED
 
         # Créons l'entité consultant avec les champs qui existent vraiment
         # Priorité aux champs first_name et last_name du modèle consultant, sinon ceux de l'utilisateur

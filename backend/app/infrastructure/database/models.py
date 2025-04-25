@@ -59,14 +59,11 @@ consultant_portfolios = Table(
 
 # Énumération des statuts possibles pour un Consultant
 class ConsultantStatus(enum.Enum):
-    PROCESS = "PROCESS"      # Candidats en cours de process
-    QUALIFIED = "QUALIFIED"  # Candidats qualifiés (vivier)
-    MISSION = "MISSION"      # Consultants en mission
-    INTERCO = "INTERCO"      # Consultants en intercontrat
-    # Statuts legacy conservés pour la compatibilité
-    AVAILABLE = "AVAILABLE"
-    UNAVAILABLE = "UNAVAILABLE"
-    LEAVING = "LEAVING"
+    SOURCED = "SOURCED"      # Talent en cours de création ou qualification initiale
+    QUALIFIED = "QUALIFIED"  # Consultant qualifié, disponible dans le vivier
+    MISSION = "MISSION"      # Consultant actuellement en mission
+    INTERCO = "INTERCO"      # Consultant en période d'intercontrat
+    ARCHIVED = "ARCHIVED"    # Consultant archivé (ex-LEAVING)
 
 # Énumération des statuts possibles pour un Appel d'Offres
 class TenderStatus(enum.Enum):
@@ -160,7 +157,7 @@ class Consultant(Base):
     hourly_rate = Column(Float)
     daily_rate = Column(Float)
     availability_date = Column(DateTime(timezone=True))
-    status = Column(Enum(ConsultantStatus), default=ConsultantStatus.AVAILABLE)
+    status = Column(Enum(ConsultantStatus), default=ConsultantStatus.SOURCED)
     cv_url = Column(String(255))
     linkedin_url = Column(String(255))
     github_url = Column(String(255))

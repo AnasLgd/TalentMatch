@@ -38,7 +38,7 @@ async def test_create_consultant_success(consultant_use_case, mock_repositories)
         title="Test Consultant",
         user_id=1,
         photo_url="https://minio.example.com/profiles/photo.jpg",
-        availability_status=AvailabilityStatus.AVAILABLE
+        availability_status=AvailabilityStatus.QUALIFIED
     )
     
     # Simuler un utilisateur existant
@@ -54,7 +54,7 @@ async def test_create_consultant_success(consultant_use_case, mock_repositories)
     mock_consultant.title = "Test Consultant"
     mock_consultant.user_id = 1
     mock_consultant.photo_url = "https://minio.example.com/profiles/photo.jpg"
-    mock_consultant.availability_status = AvailabilityStatus.AVAILABLE
+    mock_consultant.availability_status = AvailabilityStatus.QUALIFIED
     mock_repositories["consultant_repository"].create.return_value = mock_consultant
     
     # Act
@@ -77,7 +77,7 @@ async def test_create_consultant_with_invalid_company(consultant_use_case, mock_
         company_id=999,  # ID d'entreprise invalide
         title="Test Consultant",
         user_id=1,
-        availability_status=AvailabilityStatus.AVAILABLE
+        availability_status=AvailabilityStatus.QUALIFIED
     )
     
     # Simuler un utilisateur existant

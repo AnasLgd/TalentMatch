@@ -46,7 +46,7 @@ async def test_create_consultant_without_user(consultant_repository, mock_db_ses
         company_id=1,
         title="Test Consultant",
         user_id=None,  # Aucun utilisateur associé
-        availability_status=AvailabilityStatus.AVAILABLE
+        availability_status=AvailabilityStatus.QUALIFIED
     )
     
     # Simuler un modèle ConsultantModel et son id après insertion
@@ -55,7 +55,7 @@ async def test_create_consultant_without_user(consultant_repository, mock_db_ses
     mock_db_consultant.user_id = None
     mock_db_consultant.company_id = 1
     mock_db_consultant.title = "Test Consultant"
-    mock_db_consultant.status = AvailabilityStatus.AVAILABLE
+    mock_db_consultant.status = AvailabilityStatus.QUALIFIED
     
     # Configurer le comportement du mock pour refresh
     def side_effect_refresh(obj):
@@ -93,7 +93,7 @@ async def test_create_consultant_with_invalid_user_id(consultant_repository, moc
         company_id=1,
         title="Test Consultant",
         user_id=999,  # ID utilisateur inexistant
-        availability_status=AvailabilityStatus.AVAILABLE
+        availability_status=AvailabilityStatus.QUALIFIED
     )
     
     # Mock retourne None pour simuler qu'aucun utilisateur n'est trouvé

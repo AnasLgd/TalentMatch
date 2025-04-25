@@ -5,6 +5,16 @@ import { ConsultantTable } from '../ConsultantTable';
 import { PaginationControls } from '../PaginationControls';
 import { ConsultantDisplay, AvailabilityStatus } from '../../types';
 
+// Mock pour le composant Tooltip car il dépend de Radix UI
+jest.mock('@/components/ui/tooltip', () => ({
+  Tooltip: ({ children, content }: { children: React.ReactNode, content: React.ReactNode }) => (
+    <div data-testid="tooltip">
+      {children}
+      <div data-testid="tooltip-content" style={{ display: 'none' }}>{content}</div>
+    </div>
+  )
+}));
+
 // Mock des données de test
 const mockConsultants: ConsultantDisplay[] = [
   {
@@ -64,13 +74,31 @@ const mockConsultants: ConsultantDisplay[] = [
     skills: [{ id: 12, name: 'Sketch' }, { id: 13, name: 'Adobe XD' }],
     status: 'Qualifié',
   },
+  // Consultant avec beaucoup de compétences pour tester l'affichage du badge +X
+  {
+    id: 8,
+    name: 'Alex Rodriguez',
+    role: 'Full Stack Developer',
+    experience: '1 an',
+    skills: [
+      { id: 14, name: 'React' }, 
+      { id: 15, name: 'Node.js' }, 
+      { id: 16, name: 'MongoDB' },
+      { id: 17, name: 'Express' },
+      { id: 18, name: 'GraphQL' },
+      { id: 19, name: 'AWS' },
+      { id: 20, name: 'Docker' }
+    ],
+    status: 'Qualifié',
+  },
 ];
 
 describe('Section & ConsultantTable Components', () => {
-  test('Section renders correctly with title', () => {
-    render(<Section title="Test Section">Children content</Section>);
+  test('Section renders correctly with title and count', () => {
+    render(<Section title="Test Section" count={5}>Children content</Section>);
     
     expect(screen.getByText('Test Section')).toBeInTheDocument();
+    expect(screen.getByText('(5)')).toBeInTheDocument();
     expect(screen.getByText('Children content')).toBeInTheDocument();
   });
 
@@ -154,16 +182,16 @@ describe('Section & ConsultantTable Components', () => {
     // Render les quatre sections avec leurs consultants respectifs, structurés en grille
     const { container } = render(
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Section title="Candidats en cours de process">
+        <Section title="Candidats en cours de process" count={processCandidates.length}>
           <ConsultantTable consultants={processCandidates} />
         </Section>
-        <Section title="Candidats qualifiés (Vivier de consultants)">
+        <Section title="Candidats qualifiés (Vivier de consultants)" count={qualifiedConsultants.length}>
           <ConsultantTable consultants={qualifiedConsultants} />
         </Section>
-        <Section title="Consultants en mission">
+        <Section title="Consultants en mission" count={onMissionConsultants.length}>
           <ConsultantTable consultants={onMissionConsultants} />
         </Section>
-        <Section title="Consultants en intercontract">
+        <Section title="Consultants en intercontract" count={intercontractConsultants.length}>
           <ConsultantTable consultants={intercontractConsultants} />
         </Section>
       </div>
@@ -174,6 +202,11 @@ describe('Section & ConsultantTable Components', () => {
     expect(screen.getByText("Candidats qualifiés (Vivier de consultants)")).toBeInTheDocument();
     expect(screen.getByText("Consultants en mission")).toBeInTheDocument();
     expect(screen.getByText("Consultants en intercontract")).toBeInTheDocument();
+    
+    // Vérifier les compteurs
+    expect(screen.getByText('(2)')).toBeInTheDocument();
+    expect(screen.getByText('(3)')).toBeInTheDocument();
+    expect(screen.getByText('(1)')).toBeInTheDocument();
     
     // Vérifier que les consultants sont dans les bonnes sections
     expect(screen.getByText("John Doe")).toBeInTheDocument();
@@ -210,14 +243,60 @@ describe('Section & ConsultantTable Components', () => {
     expect(getByText('Suivant')).toBeInTheDocument();
   });
   
+  test('Format correctly displays 1 an vs X ans', () => {
+    const consultantsWithDifferentExperiences = [
+      {
+        id: 100,
+        name: 'Junior Dev',
+        role: 'Développeur Junior',
+        experience: '1 an',
+        skills: [{ id: 101, name: 'HTML' }],
+        status: 'Qualifié',
+      },
+      {
+        id: 101,
+        name: 'Senior Dev',
+        role: 'Développeur Senior',
+        experience: '10 ans',
+        skills: [{ id: 102, name: 'Java' }],
+        status: 'Qualifié',
+      },
+    ];
+    
+    render(<ConsultantTable consultants={consultantsWithDifferentExperiences} />);
+    
+    // Vérifier le formatage de l'expérience
+    expect(screen.getByText('1 an')).toBeInTheDocument();
+    expect(screen.getByText('10 ans')).toBeInTheDocument();
+  });
+  
+  test('Shows "+" badge when consultant has more than 5 skills', () => {
+    // Consultant avec 7 compétences
+    const consultantWithManySkills = mockConsultants[7];
+    render(<ConsultantTable consultants={[consultantWithManySkills]} />);
+    
+    // Il devrait y avoir 5 badges de compétences visibles + 1 badge "+2"
+    expect(screen.getByText('React')).toBeInTheDocument();
+    expect(screen.getByText('Node.js')).toBeInTheDocument();
+    expect(screen.getByText('MongoDB')).toBeInTheDocument();
+    expect(screen.getByText('Express')).toBeInTheDocument();
+    expect(screen.getByText('GraphQL')).toBeInTheDocument();
+    expect(screen.getByText('+2')).toBeInTheDocument();
+    
+    // Les compétences supplémentaires ne sont pas visibles directement
+    const tooltipContent = screen.getByTestId('tooltip-content');
+    expect(tooltipContent.textContent).toContain('AWS');
+    expect(tooltipContent.textContent).toContain('Docker');
+  });
+  
   test('Responsive behavior - grid adapts to screen size', () => {
     // Tester le responsive de la grille
     const { container } = render(
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Section title="Section 1">
+        <Section title="Section 1" count={5}>
           <div>Contenu 1</div>
         </Section>
-        <Section title="Section 2">
+        <Section title="Section 2" count={10}>
           <div>Contenu 2</div>
         </Section>
       </div>

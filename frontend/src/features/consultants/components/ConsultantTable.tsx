@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { ArrowUpDown, MoreVertical, Edit, Trash2, FileText, Download } from "lucide-react";
-import { ConsultantDisplay } from "@/features/consultants/types";
+import { ArrowUpDown, MoreVertical, Edit, Trash2, FileText, Download, Plus } from "lucide-react";
+import { ConsultantDisplay, Skill } from "@/features/consultants/types";
 import {
   Table,
   TableBody,
@@ -19,28 +19,128 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PaginationControls } from "./PaginationControls";
+import { Tooltip } from "@/components/ui/tooltip";
 
 // Constante pour le nombre d'éléments par page
 const ITEMS_PER_PAGE = 5;
+// Constante pour le nombre maximum de compétences à afficher
+const MAX_SKILLS_DISPLAYED = 5;
 
-// Fonction utilitaire pour déterminer la couleur du badge de statut
-const getStatusColor = (status: string): string => {
+// Fonction utilitaire pour déterminer la couleur et le tooltip du badge de statut
+const getStatusInfo = (status: string, availabilityDate?: string): { color: string, tooltip?: string } => {
+  // Vérifier si la date est future ou passée/aujourd'hui
+  const isDateInFuture = () => {
+    if (!availabilityDate) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Réinitialiser à minuit pour comparer les dates
+    const availDate = new Date(availabilityDate);
+    return availDate > today;
+  };
+
+  // Formater la date pour l'affichage
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('fr-FR');
+  };
+
   switch (status) {
     case "Disponible":
-      return "bg-green-100 text-green-800";
+      return {
+        color: "bg-green-100 text-green-800",
+        tooltip: "Consultant qualifié et disponible immédiatement"
+      };
     case "Qualifié":
-      return "bg-purple-100 text-purple-800";
+      return {
+        color: "bg-purple-100 text-purple-800",
+        tooltip: "Consultant qualifié (statut de disponibilité non précisé)"
+      };
+    case "Qualifié - Disponible":
+      return {
+        color: "bg-green-100 text-green-800",
+        tooltip: "Consultant qualifié et disponible immédiatement"
+      };
+    case "Bientôt disponible":
+      return {
+        color: "bg-sky-100 text-sky-800",
+        tooltip: availabilityDate ? `Disponible à partir du ${formatDate(availabilityDate)}` : "Date de disponibilité future"
+      };
     case "En cours de process":
-      return "bg-blue-100 text-blue-800";
+    case "En création":
+      return {
+        color: "bg-blue-100 text-blue-800",
+        tooltip: "Consultant en cours de création ou qualification"
+      };
     case "En mission":
-      return "bg-amber-100 text-amber-800";
+      return {
+        color: "bg-amber-100 text-amber-800",
+        tooltip: "Consultant actuellement en mission chez un client"
+      };
     case "Intercontrat":
-      return "bg-teal-100 text-teal-800";
-    case "Indisponible":
-      return "bg-red-100 text-red-800";
+      return {
+        color: "bg-teal-100 text-teal-800",
+        tooltip: "Consultant en période d'intercontrat, disponible pour mission"
+      };
+    case "Archivé":
+      return {
+        color: "bg-gray-100 text-gray-800",
+        tooltip: "Consultant archivé (n'est plus actif)"
+      };
     default:
-      return "bg-gray-100 text-gray-800";
+      return {
+        color: "bg-gray-100 text-gray-800"
+      };
   }
+};
+
+// Format du texte d'expérience (gestion singulier/pluriel)
+const formatExperience = (experience: string): string => {
+  const numericValue = parseInt(experience);
+  if (isNaN(numericValue)) return experience;
+  
+  return numericValue === 1 ? "1 an" : `${numericValue} ans`;
+};
+
+// Composant pour afficher les compétences avec un badge +X si nécessaire
+const SkillsList = ({ skills }: { skills: Skill[] }) => {
+  if (skills.length <= MAX_SKILLS_DISPLAYED) {
+    return (
+      <div className="flex flex-wrap gap-1">
+        {skills.map((skill, idx) => (
+          <Badge key={idx} variant="secondary">{skill.name}</Badge>
+        ))}
+      </div>
+    );
+  }
+
+  // Si plus de 5 compétences, on n'en affiche que 5 et on ajoute un badge +X
+  const displayedSkills = skills.slice(0, MAX_SKILLS_DISPLAYED);
+  const remainingCount = skills.length - MAX_SKILLS_DISPLAYED;
+  
+  return (
+    <div className="flex flex-wrap gap-1">
+      {displayedSkills.map((skill, idx) => (
+        <Badge key={idx} variant="secondary">{skill.name}</Badge>
+      ))}
+      
+      <Tooltip
+        content={
+          <div className="max-w-xs">
+            <p className="font-semibold mb-1">Autres compétences :</p>
+            <div className="flex flex-wrap gap-1">
+              {skills.slice(MAX_SKILLS_DISPLAYED).map((skill, idx) => (
+                <Badge key={idx} variant="secondary">{skill.name}</Badge>
+              ))}
+            </div>
+          </div>
+        }
+      >
+        <Badge variant="outline" className="cursor-help">
+          <Plus className="h-3 w-3 mr-1" />
+          {remainingCount}
+        </Badge>
+      </Tooltip>
+    </div>
+  );
 };
 
 interface ConsultantTableProps {
@@ -82,50 +182,61 @@ export const ConsultantTable: React.FC<ConsultantTableProps> = ({ consultants })
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[300px]">
+              <TableHead className="w-[250px]">
                 <div className="flex items-center">
                   Nom
                   <ArrowUpDown className="ml-1 h-3 w-3" />
                 </div>
               </TableHead>
-              <TableHead>
+              <TableHead className="w-[200px]">
                 <div className="flex items-center">
                   Rôle
                   <ArrowUpDown className="ml-1 h-3 w-3" />
                 </div>
               </TableHead>
-              <TableHead>Expérience</TableHead>
+              <TableHead className="w-[100px]">Expérience</TableHead>
               <TableHead>Compétences</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[140px]">Statut</TableHead>
+              <TableHead className="text-right w-[80px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {currentConsultants.map((consultant) => (
               <TableRow key={consultant.id}>
                 <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                      <span className="text-xs">
-                        {consultant.name.split(" ").map(n => n[0]).join("")}
-                      </span>
+                  <Tooltip content={consultant.name}>
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 min-w-8 rounded-full bg-muted flex items-center justify-center">
+                        <span className="text-xs">
+                          {consultant.name.split(" ").map(n => n[0]).join("")}
+                        </span>
+                      </div>
+                      <span className="truncate max-w-[180px]">{consultant.name}</span>
                     </div>
-                    <span>{consultant.name}</span>
-                  </div>
-                </TableCell>
-                <TableCell>{consultant.role}</TableCell>
-                <TableCell>{consultant.experience}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {consultant.skills.map((skill, idx) => (
-                      <Badge key={idx} variant="secondary">{skill.name}</Badge>
-                    ))}
-                  </div>
+                  </Tooltip>
                 </TableCell>
                 <TableCell>
-                  <span className={`inline-flex rounded-full px-2 py-1 text-xs ${getStatusColor(consultant.status)}`}>
-                    {consultant.status}
-                  </span>
+                  <Tooltip content={consultant.role}>
+                    <div className="truncate max-w-[140px]">{consultant.role}</div>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>{formatExperience(consultant.experience)}</TableCell>
+                <TableCell>
+                  <SkillsList skills={consultant.skills} />
+                </TableCell>
+                <TableCell>
+                  <div className="w-full flex justify-start">
+                    {(() => {
+                      const statusInfo = getStatusInfo(consultant.status, consultant.availabilityDate);
+                      return (
+                        <Tooltip content={statusInfo.tooltip || consultant.status}>
+                          <span className={`inline-flex rounded-full px-3 py-1 text-xs min-w-24 justify-center ${statusInfo.color}`}>
+                            {consultant.status}
+                          </span>
+                        </Tooltip>
+                      );
+                    })()}
+                  </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>

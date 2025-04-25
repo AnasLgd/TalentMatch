@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import CVUploadForm from './CVUploadForm';
-import ConsultantPreview from './ConsultantPreview';
+import EnhancedConsultantPreview from './EnhancedConsultantPreview';
 import UploadFallback from './UploadFallback';
 import { CvAnalysisResult } from '../types';
 
@@ -41,8 +41,8 @@ const CVUploadPage: React.FC = () => {
   };
 
   const handleManualCreate = () => {
-    // Navigate to manual consultant creation form
-    navigate('/consultants/create');
+    // Navigate to consultants page - the modal will be opened from there
+    navigate('/consultants');
   };
 
   return (
@@ -59,7 +59,7 @@ const CVUploadPage: React.FC = () => {
         
         <h1 className="text-3xl font-bold tracking-tight mt-4">Upload & Parsing de CV</h1>
         <p className="text-muted-foreground mt-1">
-          Créez rapidement un profil consultant à partir d'un CV
+          Créez rapidement un profil talent à partir d'un CV
         </p>
       </div>
 
@@ -72,7 +72,7 @@ const CVUploadPage: React.FC = () => {
         )}
 
         {currentStep === 'preview' && analysisResult && (
-          <ConsultantPreview 
+          <EnhancedConsultantPreview 
             analysisResult={analysisResult}
             companyId={companyId}
             onConsultantCreated={handleConsultantCreated}

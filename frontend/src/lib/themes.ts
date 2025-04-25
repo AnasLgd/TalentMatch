@@ -1,62 +1,118 @@
-// Définition simplifiée du thème basée sur la capture d'écran
-// Version simplifiée qui reproduit fidèlement l'image de référence
+// Définition des thèmes clair et sombre pour l'application
 
-// Couleurs principales du thème sombre - conforme à l'image fournie
-const themeColors = {
-  // Couleurs de fond - fonds très sombres presque noirs avec nuance bleue
+// Types pour les thèmes
+export type ThemeMode = 'dark' | 'light';
+
+// Couleurs du thème sombre - conforme aux valeurs actuelles de l'application
+const darkThemeColors = {
   background: "222 33% 11%", // Fond principal très sombre
   foreground: "210 40% 98%", // Texte clair sur fond sombre
   
-  // Éléments de carte
   card: "223 35% 13%", // Fond de carte légèrement plus clair que le fond principal
   cardForeground: "210 40% 98%", // Texte des cartes
   
-  // Popover et menus déroulants
   popover: "223 35% 13%", 
   popoverForeground: "210 40% 98%",
   
-  // Couleur accent principale - émeraude profond comme demandé
-  primary: "160 84% 39%", // Émeraude pour les accents
+  primary: "152 69% 65%", // Émeraude pour les accents
   primaryForeground: "222 33% 11%", // Texte sombre sur fond accent
   
-  // Couleur secondaire - utilisée pour les bordures, séparateurs
   secondary: "215 25% 24%", // Gris bleuté pour les éléments secondaires
   secondaryForeground: "210 40% 98%",
   
-  // Éléments atténués et textes secondaires
   muted: "215 28% 17%",
-  mutedForeground: "218 12% 75%",
+  mutedForeground: "218 12% 65%",
   
-  // Accent - même que primary pour cohérence
-  accent: "160 84% 39%",
+  accent: "152 69% 65%",
   accentForeground: "222 33% 11%",
   
-  // Couleur destructive pour les actions d'alerte
   destructive: "0 63% 31%", 
   destructiveForeground: "210 40% 98%",
   
-  // Bordures, inputs et éléments d'interface
   border: "215 25% 24%",
   input: "215 25% 24%",
-  ring: "160 84% 39%",
+  ring: "152 69% 65%",
   
-  // Valeur de l'arrondi des coins
   radius: "0.75rem",
 };
 
-// Fonction pour appliquer le thème au document
-export function applyTheme() {
+// Couleurs du thème clair - basé sur les valeurs définies dans index.css
+const lightThemeColors = {
+  background: "210 40% 98%", 
+  foreground: "222 33% 11%",
+  
+  card: "0 0% 100%",
+  cardForeground: "222 33% 11%",
+  
+  popover: "0 0% 100%",
+  popoverForeground: "222 33% 11%",
+  
+  primary: "152 75% 40%",
+  primaryForeground: "0 0% 100%",
+  
+  secondary: "210 20% 93%",
+  secondaryForeground: "222 33% 20%",
+  
+  muted: "210 20% 93%",
+  mutedForeground: "215 25% 40%",
+  
+  accent: "152 75% 40%",
+  accentForeground: "0 0% 100%",
+  
+  destructive: "0 85% 60%",
+  destructiveForeground: "0 0% 100%",
+  
+  border: "215 20% 85%",
+  input: "215 20% 85%",
+  ring: "152 75% 40%",
+  
+  radius: "0.75rem",
+};
+
+// Mapper toutes les clés pour les noms de variables CSS corrects
+const cssVarMap: Record<string, string> = {
+  cardForeground: "card-foreground",
+  popoverForeground: "popover-foreground",
+  primaryForeground: "primary-foreground",
+  secondaryForeground: "secondary-foreground",
+  mutedForeground: "muted-foreground",
+  accentForeground: "accent-foreground",
+  destructiveForeground: "destructive-foreground",
+  // Les autres clés restent identiques
+};
+
+// Fonction pour appliquer un thème spécifique
+export function applyTheme(mode: ThemeMode = 'dark') {
   const root = document.documentElement;
+  const colors = mode === 'dark' ? darkThemeColors : lightThemeColors;
   
   // Appliquer les variables CSS du thème
-  Object.entries(themeColors).forEach(([key, value]) => {
-    root.style.setProperty(`--${key}`, value as string);
+  Object.entries(colors).forEach(([key, value]) => {
+    const cssVar = cssVarMap[key] || key;
+    root.style.setProperty(`--${cssVar}`, value as string);
   });
+}
+
+// Fonction pour détecter les préférences du système
+export function getSystemThemePreference(): ThemeMode {
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 }
 
 // Fonction d'initialisation appelée au chargement de l'application
 export function initializeTheme() {
-  applyTheme();
+  // Récupérer le thème sauvegardé ou utiliser la préférence système
+  const savedTheme = localStorage.getItem('theme') as ThemeMode | null;
+  const preferredTheme = savedTheme || getSystemThemePreference();
+  
+  // Appliquer le thème
+  applyTheme(preferredTheme);
+  
+  // Appliquer également la classe CSS pour Tailwind
+  document.documentElement.classList.toggle('light', preferredTheme === 'light');
 }
 
-export default themeColors;
+// Exporter les thèmes pour utilisation ailleurs dans l'application
+export const themes = {
+  dark: darkThemeColors,
+  light: lightThemeColors,
+};

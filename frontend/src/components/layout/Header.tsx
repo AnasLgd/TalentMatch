@@ -40,11 +40,11 @@ const Header = () => {
   ];
 
   return (
-    <header className="h-16 border-b border-border/40 bg-card/70 backdrop-blur-md flex items-center justify-between px-6">
+    <header className="h-16 w-full flex items-center justify-between rounded-2xl bg-white shadow-sm border border-gray-200 px-6">
       <div className="flex items-center lg:hidden">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="shadow-sm rounded-xl hover:shadow-md transition-all">
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
@@ -139,43 +139,44 @@ const Header = () => {
       </div>
 
       <div className="hidden md:flex max-w-md w-full">
-        <div className="relative w-full">
+        <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Rechercher..."
-            className="pl-10 bg-background/50"
+            className="pl-10 bg-white/90 rounded-xl shadow-inner border border-gray-200"
           />
         </div>
       </div>
-<div className="flex items-center space-x-3">
-  <ThemeSwitcher />
-  
-  <Button variant="ghost" size="icon" className="relative">
-    <MessageSquare className="h-5 w-5" />
-    <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full"></span>
-  </Button>
-  
-  <Button variant="ghost" size="icon" className="relative">
-    <Bell className="h-5 w-5" />
-    <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full"></span>
-  </Button>
-  
+      <div className="flex items-center space-x-3">
+        <ThemeSwitcher />
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <User className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Profil</DropdownMenuItem>
-            <DropdownMenuItem>Paramètres</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Se déconnecter</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center space-x-2 pr-2">
+          <Button variant="ghost" size="icon" className="relative shadow-sm rounded-xl hover:shadow-md transition-all bg-white">
+            <MessageSquare className="h-5 w-5" />
+            <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full"></span>
+          </Button>
+          
+          <Button variant="ghost" size="icon" className="relative shadow-sm rounded-xl hover:shadow-md transition-all bg-white">
+            <Bell className="h-5 w-5" />
+            <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full"></span>
+          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-xl shadow-sm hover:shadow-md transition-all bg-white">
+                <User className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Profil</DropdownMenuItem>
+              <DropdownMenuItem>Paramètres</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Se déconnecter</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </header>
   );

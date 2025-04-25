@@ -94,6 +94,7 @@ interface TalentMultiStepFormProps {
   companyId: number;
   onSuccess?: (consultantId: number) => void;
   onCancel?: () => void;
+  onStepChange?: (currentStep: number, totalSteps: number) => void;
 }
 
 export const TalentMultiStepForm: React.FC<TalentMultiStepFormProps> = ({
@@ -101,6 +102,7 @@ export const TalentMultiStepForm: React.FC<TalentMultiStepFormProps> = ({
   companyId,
   onSuccess,
   onCancel,
+  onStepChange,
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -183,6 +185,13 @@ export const TalentMultiStepForm: React.FC<TalentMultiStepFormProps> = ({
   
   // Calculate total steps
   const totalSteps = 5;
+  
+  // Notify parent component about step changes
+  useEffect(() => {
+    if (onStepChange) {
+      onStepChange(currentStep, totalSteps);
+    }
+  }, [currentStep, totalSteps, onStepChange]);
   
   // Generate step titles and descriptions
   const steps = [
@@ -418,78 +427,67 @@ export const TalentMultiStepForm: React.FC<TalentMultiStepFormProps> = ({
   return (
     <FormProvider {...methods}>
       <div className="w-full">
-        {/* Stepper - Full width with enhanced styling */}
-        <div className="mb-8 px-4 w-full">
-          <Steps currentStep={currentStep} totalSteps={totalSteps}>
-            {steps.map((step, index) => (
-              <Step
-                key={index}
-                title={step.title}
-                description={step.description}
-                isActive={index === currentStep}
-                isCompleted={index < currentStep}
-              />
-            ))}
-          </Steps>
+        {/* Title of current step */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-2">{steps[currentStep].title}</h2>
+          <p className="text-muted-foreground">{steps[currentStep].description}</p>
         </div>
         
-        <Card className="shadow-sm border-muted">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-2xl">{steps[currentStep].title}</CardTitle>
-            <CardDescription className="text-base">{steps[currentStep].description}</CardDescription>
-          </CardHeader>
+        <div className="space-y-8">
+          <form className="space-y-8 rounded-xl p-6 shadow-inner bg-white/95 border border-gray-200">
+            {renderStepContent()}
+          </form>
           
-          <CardContent className="pt-6">
-            <form className="space-y-6">
-              {renderStepContent()}
-            </form>
-            
-            {/* Indicateur de sauvegarde automatique */}
-            {lastSaved && (
-              <div className="text-sm text-muted-foreground mt-6 flex items-center gap-2">
-                <div className={isSaving ? "animate-pulse bg-blue-500" : "bg-green-500"}
-                     style={{ width: "10px", height: "10px", borderRadius: "50%" }} />
-                {isSaving
-                  ? "Sauvegarde en cours..."
-                  : `Progression sauvegardée automatiquement (${lastSaved.toLocaleTimeString()})`}
-              </div>
-            )}
-          </CardContent>
-          
-          <CardFooter className="flex justify-between pt-6 border-t">
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={currentStep === 0 ? onCancel : handlePrevious}
-              >
-                {currentStep === 0 ? "Annuler" : "Précédent"}
-              </Button>
-              
-              <Button
-                type="button"
-                variant="secondary"
-                size="lg"
-                onClick={handleSaveAndExit}
-                disabled={isSubmitting || isSaving}
-              >
-                Sauvegarder et quitter
-              </Button>
+          {/* Indicateur de sauvegarde automatique */}
+          {lastSaved && (
+            <div className="text-sm text-muted-foreground mt-6 flex items-center gap-2">
+              <div className={isSaving
+                ? "animate-pulse bg-blue-500"
+                : "bg-emerald-500"
+              }
+                   style={{ width: "10px", height: "10px", borderRadius: "50%" }} />
+              {isSaving
+                ? "Sauvegarde en cours..."
+                : `Progression sauvegardée automatiquement (${lastSaved.toLocaleTimeString()})`}
             </div>
+          )}
+        </div>
+        
+        <div className="flex justify-between pt-8 mt-8 border-t border-gray-200">
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={currentStep === 0 ? onCancel : handlePrevious}
+              className="rounded-xl shadow-sm hover:shadow-md transition-all bg-white border border-gray-200"
+            >
+              {currentStep === 0 ? "Annuler" : "Précédent"}
+            </Button>
             
             <Button
               type="button"
+              variant="secondary"
               size="lg"
-              onClick={handleNext}
+              onClick={handleSaveAndExit}
               disabled={isSubmitting || isSaving}
-              className="min-w-[120px]"
+              className="rounded-xl shadow-sm hover:shadow-md transition-all bg-white border border-gray-200"
             >
-              {(isSubmitting || isSaving) && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-              {currentStep < totalSteps - 1 ? "Suivant" : "Finaliser"}
+              Sauvegarder et quitter
             </Button>
-          </CardFooter>
-        </Card>
+          </div>
+          
+          <Button
+            type="button"
+            size="lg"
+            onClick={handleNext}
+            disabled={isSubmitting || isSaving}
+            className="min-w-[120px] rounded-xl shadow-sm hover:shadow-md transition-all bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            {(isSubmitting || isSaving) && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+            {currentStep < totalSteps - 1 ? "Suivant" : "Finaliser"}
+          </Button>
+        </div>
       </div>
     </FormProvider>
   );

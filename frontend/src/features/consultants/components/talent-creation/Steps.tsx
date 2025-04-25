@@ -23,7 +23,7 @@ const stepVariants = cva(
     variants: {
       state: {
         inactive: "text-muted-foreground",
-        active: "text-primary bg-primary/10",
+        active: "text-primary bg-primary/10 font-medium",
         completed: "text-primary",
       },
     },
@@ -51,9 +51,9 @@ export const Step: React.FC<StepProps> = ({
       <div className="flex items-center">
         <div
           className={cn(
-            "w-8 h-8 rounded-full flex items-center justify-center mr-2",
+            "w-8 h-8 rounded-full flex items-center justify-center mr-2 transition-all",
             isActive
-              ? "bg-primary text-primary-foreground"
+              ? "bg-primary text-primary-foreground shadow-sm"
               : isCompleted
               ? "bg-primary text-primary-foreground"
               : "bg-muted text-muted-foreground"
@@ -63,9 +63,11 @@ export const Step: React.FC<StepProps> = ({
           {!isCompleted && <span className="text-sm font-medium">•</span>}
         </div>
         <div>
-          <div className="font-medium">{title}</div>
+          <div className="font-medium truncate">{title}</div>
           {description && (
-            <div className="text-xs text-muted-foreground">{description}</div>
+            <div className="text-xs text-muted-foreground hidden md:block truncate max-w-[120px] lg:max-w-none">
+              {description}
+            </div>
           )}
         </div>
       </div>
@@ -80,8 +82,8 @@ export const Steps: React.FC<StepsProps> = ({
   className,
 }) => {
   return (
-    <div className={cn("mx-auto px-4 py-2", className)}>
-      <div className="flex overflow-x-auto gap-2 md:gap-4">
+    <div className={cn("mx-auto py-2", className)}>
+      <div className="flex overflow-x-auto gap-1 md:gap-3 pb-2 no-scrollbar">
         {children}
       </div>
       <div className="mt-2 flex justify-between text-sm text-muted-foreground">

@@ -4,6 +4,56 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  /* Neumorphism / Soft UI Utilities - Softer, more subtle shadows */
+  .neu-shadow-out {
+    box-shadow: 4px 4px 10px #d1d9e6,
+                -4px -4px 10px #ffffff;
+  }
+  
+  .neu-shadow-in {
+    box-shadow: inset 3px 3px 6px #d1d9e6,
+                inset -3px -3px 6px #ffffff;
+  }
+  
+  .neu-shadow-flat {
+    box-shadow: 2px 2px 5px #d1d9e6,
+                -2px -2px 5px #ffffff;
+  }
+  
+  .neu-shadow-pressed {
+    box-shadow: inset 2px 2px 4px #d1d9e6,
+                inset -2px -2px 4px #ffffff;
+  }
+  
+  .neu-active {
+    box-shadow: inset 2px 2px 5px #d1d9e6,
+                inset -2px -2px 5px #ffffff;
+    background: rgba(245, 247, 250, 0.2);
+  }
+  
+  .neu-float {
+    transition: all 0.2s ease;
+  }
+  
+  .neu-float:hover {
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 12px #d1d9e6,
+                -5px -5px 12px #ffffff;
+  }
+}
+
 @layer base {
   :root {
     /* Valeurs par défaut pour le thème sombre

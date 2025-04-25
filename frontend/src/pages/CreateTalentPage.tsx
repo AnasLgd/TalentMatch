@@ -1,161 +1,215 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { TalentMultiStepForm } from "@/features/consultants/components/talent-creation/TalentMultiStepForm";
-import { CvAnalysisResult } from "@/features/cv-processing/types";
+import { ChevronLeft, Loader2 } from "lucide-react";
+
 import {
   Card,
   CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription
 } from "@/components/ui/card";
-import { DashboardContext } from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 
-interface CreateTalentPageProps {
-  cvAnalysisResult?: CvAnalysisResult;
-}
+import { TalentMultiStepForm, TalentFormActions } from "@/features/consultants/components/talent-creation/TalentMultiStepForm";
+import { useTheme } from "@/providers/ThemeProvider";
 
-const CreateTalentPage: React.FC<CreateTalentPageProps> = ({ cvAnalysisResult }) => {
+/**
+ * CreateTalentPage - A page for creating new talent profiles
+ * 
+ * This page provides a full-page experience for creating new talent profiles, with
+ * a multi-step form and navigation controls.
+ */
+const CreateTalentPage: React.FC = () => {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [totalSteps, setTotalSteps] = useState(5);
-
-  // This will be called by the child component to update the step info
-  const updateStepInfo = (current: number, total: number) => {
+  const { theme } = useTheme();
+  
+  // State for managing form progress
+  const [formActions, setFormActions] = useState<TalentFormActions | null>(null);
+  const [currentStep, setCurrentStep] = useState<number>(0);
+  const [totalSteps, setTotalSteps] = useState<number>(5);
+  
+  // Mock company ID for demo purposes
+  const companyId = 1;
+  
+  // Calculate progress percentage
+  const progressPercentage = useMemo(() => {
+    return Math.round((currentStep / (totalSteps - 1)) * 100);
+  }, [currentStep, totalSteps]);
+  
+  // Handle step change
+  const handleStepChange = (current: number, total: number) => {
     setCurrentStep(current);
     setTotalSteps(total);
   };
-
-  const handleSuccess = (consultantId: number) => {
-    navigate("/consultants");
+  
+  // Handle form actions ready callback
+  const handleFormActionsReady = (actions: TalentFormActions) => {
+    setFormActions(actions);
   };
-
+  
+  // Handle cancel action
   const handleCancel = () => {
     navigate("/consultants");
   };
-
-  // Steps data for the breadcrumb footer
-  const stepLabels = [
-    "Infos Générales",
-    "Compétences",
-    "Projets",
-    "Soft Skills",
-    "Validation"
-  ];
-  // Calculate progress percentage
-  const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
   
-  // Access sidebar state from context
-  const { sidebarExpanded } = useContext(DashboardContext);
-  
-
   return (
-    <div className="relative">
+    <div className="relative bg-gray-50 min-h-screen">
       {/* Main content area with adjusted padding to account for fixed elements */}
-      <div className="space-y-4 px-4 pt-2 pb-24 md:pt-4 max-w-[1400px] mx-auto">
+      <div className="space-y-4 px-4 pt-2 pb-32 md:pt-4 max-w-[1400px] mx-auto">
         {/* Header with back button */}
-        <div className="space-y-2 mb-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mb-2 text-muted-foreground hover:text-foreground shadow-sm rounded-xl bg-white border border-gray-200 transition-all hover:shadow-md"
-            onClick={handleCancel}
+        <div className="flex items-center gap-2 mb-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => navigate("/consultants")}
+            className="rounded-full hover:bg-gray-100"
           >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Retour à la liste des talents
+            <ChevronLeft className="h-5 w-5" />
           </Button>
-
-          <h1 className="text-2xl font-bold tracking-tight">
-            Créer un nouveau Talent
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Complétez les étapes pour enrichir votre vivier.
-          </p>
+          <h1 className="text-xl font-semibold">Retour à la liste des talents</h1>
         </div>
-
-        {/* Two-column layout container */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left column (65% on desktop) - Form container */}
-          <div className="lg:col-span-8">
-            <Card className="rounded-2xl shadow-sm border border-gray-200 bg-white hover:shadow-md transition-all duration-300">
-              <CardContent className="p-6 sm:p-8">
+        
+        {/* Main content card */}
+        <Card className="p-6 bg-white rounded-xl shadow-md">
+          <CardHeader className="px-0 pt-0">
+            <CardTitle className="text-2xl font-bold mb-1">Création d'un nouveau talent</CardTitle>
+            <CardDescription>
+              Créez un nouveau profil de talent en suivant les étapes ci-dessous
+            </CardDescription>
+          </CardHeader>
+          
+          {/* Content area */}
+          <CardContent className="px-0 pb-4">
+            
+            {/* Two-column layout for form and help panel */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left column (form) - Takes 2/3 of the space on large screens */}
+              <div className="lg:col-span-2">
                 <TalentMultiStepForm
-                  cvAnalysisResult={cvAnalysisResult}
-                  companyId={1} // In a real app, this would come from an auth context
-                  onSuccess={handleSuccess}
+                  companyId={companyId}
                   onCancel={handleCancel}
-                  onStepChange={updateStepInfo}
+                  onStepChange={handleStepChange}
+                  onFormActionsReady={handleFormActionsReady}
                 />
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right column (35% on desktop) - Qualification card */}
-          <div className="lg:col-span-4">
-            <Card className="rounded-2xl shadow-sm border border-gray-200 sticky top-24 bg-white hover:shadow-md transition-all duration-300">
-              <CardHeader className="p-6 pb-4">
-                <CardTitle className="text-lg">Qualification & Valorisation du Talent</CardTitle>
-                <CardDescription>
-                  Zone dédiée à l'évaluation et à la valorisation du profil consultant.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 pt-2">
-                <div className="aspect-square rounded-2xl bg-white flex items-center justify-center shadow-inner border border-gray-200">
-                  <p className="text-center text-muted-foreground px-6">
-                    Cette section affichera prochainement des informations enrichies sur le profil consultant
-                    et les opportunités de valorisation.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-
-      {/* Fixed footer that stays in view regardless of scroll position */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-        <div className={`mx-auto transition-all duration-300 p-3 pointer-events-auto ${
-          sidebarExpanded ? 'lg:ml-[calc(16rem+24px)]' : 'lg:ml-[calc(5rem+24px)]'
-        } mr-3 mb-3`}>
-          <div className="bg-white shadow-sm rounded-2xl border border-gray-200 py-6 px-8 h-28 flex flex-col justify-center">
-          <div className="max-w-[1400px] mx-auto">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium">
-                Étape {currentStep + 1} sur {totalSteps}
-              </span>
-              <span className="text-sm font-medium">
-                {Math.round(progressPercentage)}%
-              </span>
-            </div>
-            
-            {/* Progress bar */}
-            <Progress value={progressPercentage} className="h-2.5 shadow-inner bg-gray-100" indicatorClassName="bg-emerald-500" />
-            
-            {/* Step labels - Hidden on mobile for better spacing */}
-            <div className="flex items-center pt-4 overflow-x-auto no-scrollbar">
-              <div className="flex space-x-3 items-center text-sm">
-                {stepLabels.map((label, index) => (
-                  <React.Fragment key={index}>
-                    <span className={`whitespace-nowrap px-3 py-1 rounded-lg transition-all ${
-                      index === currentStep
-                        ? 'font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 shadow-sm'
-                        : index < currentStep
-                          ? 'text-emerald-600 bg-emerald-50/50'
-                          : 'text-muted-foreground'
-                    }`}>
-                      {label}
-                    </span>
-                    {index < stepLabels.length - 1 && (
-                      <span className="text-muted-foreground">›</span>
-                    )}
-                  </React.Fragment>
-                ))}
+              </div>
+              
+              {/* Right column (qualification panel) - Takes 1/3 of the space */}
+              <div className="hidden lg:block">
+                <Card className="bg-amber-50/80 border border-amber-200/70 rounded-xl shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Qualification & Valorisation du Talent</CardTitle>
+                    <CardDescription>
+                      Évaluez le potentiel du candidat et mettez en valeur ses atouts
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 text-sm">
+                      Zone dédiée à l'évaluation et à la valorisation du profil consultant.
+                    </p>
+                    <div className="mt-4 p-4 bg-white rounded-lg border border-amber-100">
+                      <h4 className="font-medium mb-2">Notations RH</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Cette section vous permet d'attribuer des notes sur différents critères
+                        pour mieux qualifier le profil.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
-          </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Fixed footer with steps - soft UI style */}
+      <div className="fixed bottom-0 left-0 right-0 z-10 px-4 pb-4">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="ml-[220px] bg-white rounded-xl border border-gray-100 shadow-lg p-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0 w-full">
+              {/* Left side: Progress information and steps */}
+              <div className="flex-1 mr-6 space-y-2 flex flex-col justify-center">
+                {/* Progress percentage and bar */}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Étape {currentStep + 1} sur {totalSteps}</span>
+                  <span className="text-sm font-medium text-emerald-600">{progressPercentage}%</span>
+                </div>
+                <Progress value={progressPercentage} className="h-3 bg-gray-100 rounded-full shadow-inner" />
+                
+                {/* Step markers */}
+                <div className="flex justify-between mt-3">
+                  <div 
+                    className={`flex flex-col items-center ${currentStep === 0 ? 'text-emerald-600' : 'text-gray-400'}`}
+                  >
+                    <div className={`w-4 h-4 rounded-full mb-1.5 transition-all duration-300 shadow-sm ${currentStep === 0 ? 'bg-emerald-600 ring-2 ring-emerald-100' : 'bg-gray-200'}`}></div>
+                    <span className="text-xs font-medium">Identité</span>
+                  </div>
+                  <div 
+                    className={`flex flex-col items-center ${currentStep === 1 ? 'text-emerald-600' : 'text-gray-400'}`}
+                  >
+                    <div className={`w-4 h-4 rounded-full mb-1.5 transition-all duration-300 shadow-sm ${currentStep === 1 ? 'bg-emerald-600 ring-2 ring-emerald-100' : 'bg-gray-200'}`}></div>
+                    <span className="text-xs font-medium">Compétences</span>
+                  </div>
+                  <div 
+                    className={`flex flex-col items-center ${currentStep === 2 ? 'text-emerald-600' : 'text-gray-400'}`}
+                  >
+                    <div className={`w-4 h-4 rounded-full mb-1.5 transition-all duration-300 shadow-sm ${currentStep === 2 ? 'bg-emerald-600 ring-2 ring-emerald-100' : 'bg-gray-200'}`}></div>
+                    <span className="text-xs font-medium">Projets</span>
+                  </div>
+                  <div 
+                    className={`flex flex-col items-center ${currentStep === 3 ? 'text-emerald-600' : 'text-gray-400'}`}
+                  >
+                    <div className={`w-4 h-4 rounded-full mb-1.5 transition-all duration-300 shadow-sm ${currentStep === 3 ? 'bg-emerald-600 ring-2 ring-emerald-100' : 'bg-gray-200'}`}></div>
+                    <span className="text-xs font-medium">Soft Skills</span>
+                  </div>
+                  <div 
+                    className={`flex flex-col items-center ${currentStep === 4 ? 'text-emerald-600' : 'text-gray-400'}`}
+                  >
+                    <div className={`w-4 h-4 rounded-full mb-1.5 transition-all duration-300 shadow-sm ${currentStep === 4 ? 'bg-emerald-600 ring-2 ring-emerald-100' : 'bg-gray-200'}`}></div>
+                    <span className="text-xs font-medium">Validation</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right side: Action buttons with soft UI style */}
+              <div className="flex gap-4 justify-end items-center">
+                {/* Cancel button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                  className="rounded-xl bg-white border-gray-200 shadow-sm hover:shadow-md hover:bg-gray-50 transition-all duration-300"
+                >
+                  Annuler
+                </Button>
+                
+                {/* Save and exit button */}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => formActions?.handleSaveAndExit()}
+                  disabled={!formActions || formActions.isSubmitting || formActions.isSaving}
+                  className="rounded-xl bg-gray-50 border border-gray-200 shadow-sm hover:shadow-md hover:bg-gray-100 transition-all duration-300"
+                >
+                  {formActions?.isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Sauvegarder et quitter
+                </Button>
+                
+                {/* Next/Submit button */}
+                <Button
+                  type="button"
+                  onClick={() => formActions?.handleNext()}
+                  disabled={!formActions || formActions.isSubmitting || formActions.isSaving}
+                  className="rounded-xl shadow-sm hover:shadow-md transition-all duration-300 bg-emerald-600 hover:bg-emerald-500 text-white min-w-[120px] border border-emerald-500"
+                >
+                  {(formActions?.isSubmitting || formActions?.isSaving) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {currentStep < totalSteps - 1 ? "Suivant" : "Finaliser"}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -215,33 +215,7 @@ export const IdentityStep: React.FC<IdentityStepProps> = ({
         )}
       />
 
-      {/* Évaluation du potentiel par RH */}
-      <div className="p-4 border rounded-md bg-amber-50">
-        <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
-          Qualification RH
-          <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
-        </h3>
-        <FormField
-          control={control}
-          name="potential_evaluation"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Potentiel global</FormLabel>
-              <FormControl>
-                <HrRating
-                  value={field.value || 0}
-                  onChange={(value) => setValue("potential_evaluation", value)}
-                />
-              </FormControl>
-              <FormMessage />
-              <p className="text-xs text-muted-foreground mt-1">
-                Évaluez le potentiel global du candidat sur une échelle de 1 à 5 étoiles.
-                Cette évaluation est à usage interne uniquement.
-              </p>
-            </FormItem>
-          )}
-        />
-      </div>
+      {/* Note: HR Qualification moved to the right column */}
     </div>
   );
 };

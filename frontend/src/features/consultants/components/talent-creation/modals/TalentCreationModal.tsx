@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { TalentMultiStepForm } from "./TalentMultiStepForm";
+import { TalentMultiStepForm } from "../form/TalentMultiStepForm";
 import { CvAnalysisResult } from "@/features/cv-processing/types";
 
 interface TalentCreationModalProps {

@@ -1,0 +1,72 @@
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        },
+        "detailed": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s - [%(filename)s:%(lineno)d]"
+        },
+        "json": {
+            "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
+            "class": "pythonjsonlogger.jsonlogger.JsonFormatter"
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "INFO",
+            "formatter": "standard",
+            "stream": "ext://sys.stdout"
+        },
+        "development_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "DEBUG",
+            "formatter": "detailed",
+            "filename": "/projects/TalentMatch/logs/development.log",
+            "maxBytes": 10485760,
+            "backupCount": 5,
+            "encoding": "utf8"
+        },
+        "error_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "ERROR",
+            "formatter": "detailed",
+            "filename": "/projects/TalentMatch/logs/error.log",
+            "maxBytes": 10485760,
+            "backupCount": 5,
+            "encoding": "utf8"
+        },
+        "audit_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "INFO",
+            "formatter": "json",
+            "filename": "/projects/TalentMatch/logs/audit.log",
+            "maxBytes": 10485760,
+            "backupCount": 5,
+            "encoding": "utf8"
+        }
+    },
+    "loggers": {
+        "development": {
+            "level": "DEBUG",
+            "handlers": ["console", "development_file"],
+            "propagate": false
+        },
+        "error": {
+            "level": "ERROR",
+            "handlers": ["console", "error_file"],
+            "propagate": false
+        },
+        "audit": {
+            "level": "INFO",
+            "handlers": ["audit_file"],
+            "propagate": false
+        }
+    },
+    "root": {
+        "level": "INFO",
+        "handlers": ["console", "development_file", "error_file"]
+    }
+}

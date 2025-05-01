@@ -11,8 +11,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { HrRating } from "../HrRating";
-import { TalentFormValues } from "../TalentMultiStepForm";
+import { HrRating } from "../../common/HrRating";
+import { TalentFormValues } from "../../schemas/TalentFormSchema";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { PlusCircle, Trash2 } from "lucide-react";
@@ -133,32 +133,14 @@ export const SoftSkillsStep: React.FC<SoftSkillsStepProps> = ({
                 <div className="flex justify-between items-center">
                   <div className="font-medium mr-2">{field.name}</div>
                   
-                  <div className="flex items-center gap-4">
-                    <FormField
-                      control={control}
-                      name={`soft_skills.${index}.rating`}
-                      render={({ field: ratingField }) => (
-                        <FormItem>
-                          <FormControl>
-                            <HrRating
-                              value={ratingField.value || 0}
-                              onChange={ratingField.onChange}
-                              size="sm"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => remove(index)}
-                      className="h-8 w-8"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => remove(index)}
+                    className="h-8 w-8"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>

@@ -17,8 +17,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip } from "@/components/ui/tooltip";
-import { HrRating } from "../HrRating";
-import { TalentFormValues } from "../TalentMultiStepForm";
+import { Switch } from "@/components/ui/switch";
+import { TalentFormValues } from "../../schemas/TalentFormSchema";
 import { cn } from "@/lib/utils";
 import { InfoIcon } from "lucide-react";
 
@@ -196,17 +196,106 @@ export const IdentityStep: React.FC<IdentityStepProps> = ({
         </div>
       </div>
 
+      {/* Coordonnées & Mobilité */}
+      <div className="mt-8 pt-6 border-t">
+        <h3 className="text-lg font-medium mb-4">Coordonnées & Mobilité</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Téléphone */}
+          <FormField
+            control={control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Téléphone</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Ex: +33 6 12 34 56 78"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Email */}
+          <FormField
+            control={control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="Ex: candidat@email.com"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Mobilité */}
+        <div className="mt-4">
+          <h4 className="text-sm font-medium text-muted-foreground mb-3">Mobilité</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Permis de conduire */}
+            <FormField
+              control={control}
+              name="driving_license"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Permis de conduire</FormLabel>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            {/* Véhicule personnel */}
+            <FormField
+              control={control}
+              name="own_vehicle"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Véhicule personnel</FormLabel>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+      </div>
+
       {/* Bio */}
       <FormField
         control={control}
         name="bio"
         render={({ field }) => (
-          <FormItem>
+          <FormItem className="mt-6">
             <FormLabel>Bio / Description</FormLabel>
             <FormControl>
               <Textarea
                 placeholder="Brève description du profil..."
-                className="resize-none h-24"
+                className="resize-none h-24 rounded-xl shadow-inner"
                 {...field}
               />
             </FormControl>
@@ -214,8 +303,6 @@ export const IdentityStep: React.FC<IdentityStepProps> = ({
           </FormItem>
         )}
       />
-
-      {/* Note: HR Qualification moved to the right column */}
     </div>
   );
 };

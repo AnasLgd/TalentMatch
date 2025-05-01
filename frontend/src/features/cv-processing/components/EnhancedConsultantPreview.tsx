@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 import { CvAnalysisResult } from '../types';
 import { useToast } from '@/hooks/use-toast';
-import { TalentCreationModal } from '@/features/consultants/components/talent-creation/TalentCreationModal';
+import { TalentCreationModal } from '@/features/consultants/components/talent-creation/modals/TalentCreationModal';
 
 interface EnhancedConsultantPreviewProps {
   analysisResult: CvAnalysisResult;

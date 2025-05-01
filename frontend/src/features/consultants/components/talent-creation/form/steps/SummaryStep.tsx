@@ -12,12 +12,59 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { TalentFormValues } from "../TalentMultiStepForm";
-import { HrRating } from "../HrRating";
+import { TalentFormValues } from "../../schemas/TalentFormSchema";
+import { HrRating } from "../../common/HrRating";
 import { User, Star, FileText, Sparkles } from "lucide-react";
 
+// Types spécifiques pour améliorer la sécurité de type
+interface RatedItem {
+  [key: string]: string | number | boolean | undefined;
+}
+
+interface SkillWithRating extends RatedItem {
+  name: string;
+  hr_rating?: number;
+}
+
+interface ProjectWithRating extends RatedItem {
+  title: string;
+  complexity_rating?: number;
+  impact_rating?: number;
+  autonomy_rating?: number;
+}
+
+interface SoftSkillWithRating extends RatedItem {
+  name: string;
+  rating?: number;
+}
+
+// Utilitaire pour calculer la moyenne des notes
+const calculateAverageRating = <T extends RatedItem>(
+  items: T[],
+  ratingField: string | ((item: T) => number)
+): number => {
+  if (!items || items.length === 0) return 0;
+  
+  const getItemRating = typeof ratingField === 'function'
+    ? ratingField
+    : (item: T) => item[ratingField] || 0;
+    
+  const sum = items.reduce((acc, item) => acc + getItemRating(item), 0);
+  return sum / items.length;
+};
+
+// Utilitaire pour calculer la moyenne des notes de projet
+const calculateProjectRating = (project: ProjectWithRating): number => {
+  const ratings = [
+    project.complexity_rating || 0,
+    project.impact_rating || 0,
+    project.autonomy_rating || 0
+  ];
+  return ratings.reduce((a, b) => a + b, 0) / ratings.length;
+};
+
 export const SummaryStep: React.FC = () => {
-  const { control, watch, setValue } = useFormContext<TalentFormValues>();
+  const { control, watch } = useFormContext<TalentFormValues>();
   
   // Get form values
   const formValues = watch();
@@ -33,25 +80,10 @@ export const SummaryStep: React.FC = () => {
     potential_evaluation,
   } = formValues;
   
-  // Calculate average ratings if available
-  const skillsRating = skills.length > 0
-    ? skills.reduce((sum, skill) => sum + (skill.hr_rating || 0), 0) / skills.length
-    : 0;
-    
-  const projectsRating = projects.length > 0
-    ? projects.reduce((sum, project) => {
-        const ratings = [
-          project.complexity_rating || 0,
-          project.impact_rating || 0,
-          project.autonomy_rating || 0
-        ];
-        return sum + (ratings.reduce((a, b) => a + b, 0) / ratings.length);
-      }, 0) / projects.length
-    : 0;
-    
-  const softSkillsRating = soft_skills.length > 0
-    ? soft_skills.reduce((sum, skill) => sum + (skill.rating || 0), 0) / soft_skills.length
-    : 0;
+  // Calculate average ratings using utility functions
+  const skillsRating = calculateAverageRating(skills, 'hr_rating');
+  const projectsRating = calculateAverageRating(projects, calculateProjectRating);
+  const softSkillsRating = calculateAverageRating(soft_skills, 'rating');
   
   return (
     <div className="space-y-6">
@@ -82,7 +114,7 @@ export const SummaryStep: React.FC = () => {
               {potential_evaluation && (
                 <div className="flex items-center mt-4">
                   <span className="text-sm mr-2">Potentiel global:</span>
-                  <HrRating value={potential_evaluation} onChange={() => {}} size="sm" />
+                  <HrRating value={potential_evaluation} readOnly={true} size="sm" />
                 </div>
               )}
             </div>
@@ -112,7 +144,7 @@ export const SummaryStep: React.FC = () => {
               {skillsRating > 0 && (
                 <div className="flex items-center mt-4">
                   <span className="text-sm mr-2">Évaluation moyenne:</span>
-                  <HrRating value={Math.round(skillsRating)} onChange={() => {}} size="sm" />
+                  <HrRating value={Math.round(skillsRating)} readOnly={true} size="sm" />
                 </div>
               )}
             </div>
@@ -149,7 +181,7 @@ export const SummaryStep: React.FC = () => {
               {projectsRating > 0 && (
                 <div className="flex items-center mt-4">
                   <span className="text-sm mr-2">Évaluation moyenne:</span>
-                  <HrRating value={Math.round(projectsRating)} onChange={() => {}} size="sm" />
+                  <HrRating value={Math.round(projectsRating)} readOnly={true} size="sm" />
                 </div>
               )}
             </div>
@@ -179,7 +211,7 @@ export const SummaryStep: React.FC = () => {
               {softSkillsRating > 0 && (
                 <div className="flex items-center mt-4">
                   <span className="text-sm mr-2">Évaluation moyenne:</span>
-                  <HrRating value={Math.round(softSkillsRating)} onChange={() => {}} size="sm" />
+                  <HrRating value={Math.round(softSkillsRating)} readOnly={true} size="sm" />
                 </div>
               )}
             </div>

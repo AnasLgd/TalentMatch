@@ -11,8 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { HrRating } from "../HrRating";
-import { TalentFormValues } from "../TalentMultiStepForm";
+import { HrRating } from "../../common/HrRating";
+import { TalentFormValues } from "../../schemas/TalentFormSchema";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { PlusCircle, Trash2 } from "lucide-react";
@@ -150,78 +150,7 @@ export const ProjectsStep: React.FC<ProjectsStepProps> = ({
                   {watch(`projects.${index}.description`)}
                 </div>
                 
-                {/* HR Ratings section */}
-                <div className="mt-4 pt-4 border-t">
-                  <h4 className="font-medium mb-3 flex items-center">
-                    <span className="mr-2">Qualification RH du projet</span>
-                    <Badge variant="outline">Interne</Badge>
-                  </h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Complexity Rating */}
-                    <FormField
-                      control={control}
-                      name={`projects.${index}.complexity_rating`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Complexité</FormLabel>
-                          <FormControl>
-                            <HrRating
-                              value={field.value || 0}
-                              onChange={field.onChange}
-                              size="sm"
-                            />
-                          </FormControl>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Évaluez la complexité technique
-                          </p>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {/* Impact Rating */}
-                    <FormField
-                      control={control}
-                      name={`projects.${index}.impact_rating`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Impact</FormLabel>
-                          <FormControl>
-                            <HrRating
-                              value={field.value || 0}
-                              onChange={field.onChange}
-                              size="sm"
-                            />
-                          </FormControl>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Évaluez l'impact business
-                          </p>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {/* Autonomy Rating */}
-                    <FormField
-                      control={control}
-                      name={`projects.${index}.autonomy_rating`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Autonomie</FormLabel>
-                          <FormControl>
-                            <HrRating
-                              value={field.value || 0}
-                              onChange={field.onChange}
-                              size="sm"
-                            />
-                          </FormControl>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Évaluez le niveau d'autonomie
-                          </p>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
+                {/* Removed HR Ratings section - now in QualificationSidebar */}
               </div>
             </CardContent>
           </Card>

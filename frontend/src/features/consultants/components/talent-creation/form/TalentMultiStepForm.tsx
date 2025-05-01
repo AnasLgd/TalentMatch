@@ -9,10 +9,11 @@ import { SkillsStep } from "./steps/SkillsStep";
 import { ProjectsStep } from "./steps/ProjectsStep";
 import { SoftSkillsStep } from "./steps/SoftSkillsStep";
 import { SummaryStep } from "./steps/SummaryStep";
+import { QualificationSidebar } from "../common/QualificationSidebar";
 import { CvAnalysisResult } from "@/features/cv-processing/types";
 import { toast } from "@/hooks/use-toast";
-import { AvailabilityStatus, ConsultantCreate } from "../../types";
-import { consultantService } from "../../services/consultant-service";
+import { AvailabilityStatus, ConsultantCreate } from "../../../types";
+import { consultantService } from "../../../services/consultant-service";
 
 // Define the form schema 
 export type TalentFormActions = {
@@ -31,7 +32,7 @@ interface TalentMultiStepFormProps {
   onSuccess?: (consultantId: number) => void;
   onCancel?: () => void;
   onStepChange?: (currentStep: number, totalSteps: number) => void;
-  renderButtons?: boolean; 
+  renderButtons?: boolean;
   onFormActionsReady?: (actions: TalentFormActions) => void;
 }
 
@@ -162,42 +163,52 @@ export const TalentMultiStepForm: React.FC<TalentMultiStepFormProps> = ({
   
   return (
     <FormProvider {...methods}>
-      <div className="w-full">
+      <div className="w-full mb-20">
         {/* Title of current step */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-2">{steps[currentStep].title}</h2>
-          <p className="text-muted-foreground">{steps[currentStep].description}</p>
+        <div className="mb-4 md:mb-6">
+          <h2 className="text-xl md:text-2xl font-semibold mb-1">{steps[currentStep].title}</h2>
+          <p className="text-sm text-muted-foreground">{steps[currentStep].description}</p>
         </div>
         
-        <div className="space-y-8">
-          <form className="space-y-8 rounded-xl p-6 shadow-inner bg-white/95 border border-gray-200">
-            {renderStepContent()}
-          </form>
+        {/* Main content area with two columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left column - Main form - 2/3 de l'espace sur desktop */}
+          <div className="lg:col-span-2 space-y-6">
+            <form className="space-y-6 rounded-2xl p-6 shadow-inner bg-white/95 border border-gray-200">
+              {renderStepContent()}
+            </form>
+            
+            {/* Indicateur de sauvegarde automatique */}
+            {lastSaved && (
+              <div className="text-xs md:text-sm text-muted-foreground mt-4 flex items-center gap-2">
+                <div
+                  className={isSaving ? "animate-pulse bg-blue-500" : "bg-emerald-500"}
+                  style={{ width: "8px", height: "8px", borderRadius: "50%" }}
+                />
+                {isSaving
+                  ? "Sauvegarde en cours..."
+                  : `Progression sauvegardée automatiquement (${lastSaved.toLocaleTimeString()})`}
+              </div>
+            )}
+          </div>
           
-          {/* Indicateur de sauvegarde automatique */}
-          {lastSaved && (
-            <div className="text-sm text-muted-foreground mt-6 flex items-center gap-2">
-              <div 
-                className={isSaving ? "animate-pulse bg-blue-500" : "bg-emerald-500"}
-                style={{ width: "10px", height: "10px", borderRadius: "50%" }} 
-              />
-              {isSaving
-                ? "Sauvegarde en cours..."
-                : `Progression sauvegardée automatiquement (${lastSaved.toLocaleTimeString()})`}
-            </div>
-          )}
+          {/* Right column - HR Qualification Block - 1/3 de l'espace sur desktop */}
+          <div className="lg:col-span-1">
+            {/* Ne pas afficher dans l'étape de résumé où nous avons déjà la section HR */}
+            {currentStep !== 4 && <QualificationSidebar currentStep={currentStep} />}
+          </div>
         </div>
         
         {/* Form buttons */}
         {renderButtons && (
-          <div className="flex justify-between pt-8 mt-8 border-t border-gray-200">
-            <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row sm:justify-between pt-6 md:pt-8 mt-6 md:mt-8 border-t border-gray-200 gap-4 sm:gap-0">
+            <div className="flex flex-wrap gap-3 w-full sm:w-auto justify-center sm:justify-start">
               <Button
                 type="button"
                 variant="outline"
-                size="lg"
+                size="default"
                 onClick={currentStep === 0 ? onCancel : handlePrevious}
-                className="rounded-xl shadow-sm hover:shadow-md transition-all bg-white border border-gray-200"
+                className="rounded-xl shadow-sm hover:shadow-md transition-all bg-white border border-gray-200 text-sm"
               >
                 {currentStep === 0 ? "Annuler" : "Précédent"}
               </Button>
@@ -205,10 +216,10 @@ export const TalentMultiStepForm: React.FC<TalentMultiStepFormProps> = ({
               <Button
                 type="button"
                 variant="secondary"
-                size="lg"
+                size="default"
                 onClick={handleSaveAndExit}
                 disabled={isSubmitting || isSaving}
-                className="rounded-xl shadow-sm hover:shadow-md transition-all bg-white border border-gray-200"
+                className="rounded-xl shadow-sm hover:shadow-md transition-all bg-white border border-gray-200 text-sm"
               >
                 Sauvegarder et quitter
               </Button>
@@ -216,12 +227,12 @@ export const TalentMultiStepForm: React.FC<TalentMultiStepFormProps> = ({
             
             <Button
               type="button"
-              size="lg"
+              size="default"
               onClick={handleNext}
               disabled={isSubmitting || isSaving}
-              className="min-w-[120px] rounded-xl shadow-sm hover:shadow-md transition-all bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="w-full sm:w-auto min-w-[120px] rounded-xl shadow-sm hover:shadow-md transition-all bg-emerald-600 hover:bg-emerald-500 text-white text-sm"
             >
-              {(isSubmitting || isSaving) && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+              {(isSubmitting || isSaving) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {currentStep < totalSteps - 1 ? "Suivant" : "Finaliser"}
             </Button>
           </div>

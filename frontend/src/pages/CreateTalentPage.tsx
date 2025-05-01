@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 
-import { TalentMultiStepForm, TalentFormActions } from "@/features/consultants/components/talent-creation/TalentMultiStepForm";
+import { TalentMultiStepForm, TalentFormActions } from "@/features/consultants/components/talent-creation/form/TalentMultiStepForm";
 import { useTheme } from "@/providers/ThemeProvider";
 
 /**
@@ -59,22 +59,22 @@ const CreateTalentPage: React.FC = () => {
   return (
     <div className="relative bg-gray-50 min-h-screen">
       {/* Main content area with adjusted padding to account for fixed elements */}
-      <div className="space-y-4 px-4 pt-2 pb-32 md:pt-4 max-w-[1400px] mx-auto">
+      <div className="space-y-4 px-4 pt-2 pb-32 md:pt-4 max-w-[1600px] mx-auto">
         {/* Header with back button */}
         <div className="flex items-center gap-2 mb-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => navigate("/consultants")}
             className="rounded-full hover:bg-gray-100"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-xl font-semibold">Retour à la liste des talents</h1>
+          <h1 className="text-sm font-medium text-muted-foreground">Retour à la liste des talents</h1>
         </div>
         
         {/* Main content card */}
-        <Card className="p-6 bg-white rounded-xl shadow-md">
+        <Card className="p-4 md:p-6 bg-white rounded-xl shadow-md">
           <CardHeader className="px-0 pt-0">
             <CardTitle className="text-2xl font-bold mb-1">Création d'un nouveau talent</CardTitle>
             <CardDescription>
@@ -84,50 +84,20 @@ const CreateTalentPage: React.FC = () => {
           
           {/* Content area */}
           <CardContent className="px-0 pb-4">
-            
-            {/* Two-column layout for form and help panel */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left column (form) - Takes 2/3 of the space on large screens */}
-              <div className="lg:col-span-2">
-                <TalentMultiStepForm
-                  companyId={companyId}
-                  onCancel={handleCancel}
-                  onStepChange={handleStepChange}
-                  onFormActionsReady={handleFormActionsReady}
-                />
-              </div>
-              
-              {/* Right column (qualification panel) - Takes 1/3 of the space */}
-              <div className="hidden lg:block">
-                <Card className="bg-amber-50/80 border border-amber-200/70 rounded-xl shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Qualification & Valorisation du Talent</CardTitle>
-                    <CardDescription>
-                      Évaluez le potentiel du candidat et mettez en valeur ses atouts
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600 text-sm">
-                      Zone dédiée à l'évaluation et à la valorisation du profil consultant.
-                    </p>
-                    <div className="mt-4 p-4 bg-white rounded-lg border border-amber-100">
-                      <h4 className="font-medium mb-2">Notations RH</h4>
-                      <p className="text-xs text-muted-foreground">
-                        Cette section vous permet d'attribuer des notes sur différents critères
-                        pour mieux qualifier le profil.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+            {/* Full width form */}
+            <TalentMultiStepForm
+              companyId={companyId}
+              onCancel={handleCancel}
+              onStepChange={handleStepChange}
+              onFormActionsReady={handleFormActionsReady}
+            />
           </CardContent>
         </Card>
       </div>
       
       {/* Fixed footer with steps - soft UI style */}
       <div className="fixed bottom-0 left-0 right-0 z-10 px-4 pb-4">
-        <div className="max-w-[1400px] mx-auto">
+        <div className="max-w-[1600px] mx-auto">
           <div className="ml-[220px] bg-white rounded-xl border border-gray-100 shadow-lg p-4">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0 w-full">
               {/* Left side: Progress information and steps */}

@@ -12,8 +12,19 @@ export const formSchema = z.object({
   ),
   availability_date: z.string().optional(),
   
-  // HR evaluation for identity step
+  // Contact & Mobility
+  phone: z.string().optional(),
+  email: z.string().email({ message: "Format d'email invalide" }).optional(),
+  driving_license: z.boolean().optional(),
+  own_vehicle: z.boolean().optional(),
+  
+  // HR Qualification
   potential_evaluation: z.number().min(1).max(5).optional(),
+  candidate_status: z.string().optional(),
+  expectations: z.string().optional(),
+  salary_expectations: z.string().optional(),
+  salary_details: z.string().optional(),
+  hr_notes: z.string().max(1000).optional(),
   
   // Skills
   skills: z.array(
@@ -55,7 +66,7 @@ export const formSchema = z.object({
   
   // Final HR Validation
   hr_status: z.enum(["SOURCED", "IN_QUALIFICATION", "QUALIFIED"]).optional(),
-  hr_notes: z.string().optional(),
+  // hr_notes is already defined above, don't duplicate it
   
   // Hidden fields (not displayed in the form)
   company_id: z.number(),

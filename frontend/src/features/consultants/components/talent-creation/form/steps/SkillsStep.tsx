@@ -11,8 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { HrRating } from "../HrRating";
-import { TalentFormValues } from "../TalentMultiStepForm";
+import { HrRating } from "../../common/HrRating";
+import { TalentFormValues } from "../../schemas/TalentFormSchema";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { PlusCircle, Trash2 } from "lucide-react";
@@ -211,30 +211,7 @@ export const SkillsStep: React.FC<SkillsStepProps> = ({
                   />
                 </div>
                 
-                {/* HR Rating section */}
-                <div className="mt-4 pt-4 border-t">
-                  <FormField
-                    control={control}
-                    name={`skills.${index}.hr_rating`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center">
-                          <span className="mr-2">Évaluation RH</span>
-                          <Badge variant="outline">Interne</Badge>
-                        </FormLabel>
-                        <FormControl>
-                          <HrRating
-                            value={field.value || 0}
-                            onChange={field.onChange}
-                          />
-                        </FormControl>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Évaluez cette compétence sur une échelle de 1 à 5 étoiles
-                        </p>
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                {/* Removed HR Rating section - now in QualificationSidebar */}
               </div>
             </CardContent>
           </Card>

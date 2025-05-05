@@ -1,4 +1,3 @@
-
 # TalentMatch - Documentation Technique
 
 ## Présentation Générale
@@ -10,7 +9,7 @@ TalentMatch est une plateforme qui permet aux ESN (Entreprises de Services du Nu
 - **Frontend** : React, TypeScript, Tailwind CSS, Shadcn UI
 - **Backend** : FastAPI (Python)
 - **Base de données** : PostgreSQL
-- **Stockage** : Supabase Storage
+- **Stockage** : MinIO
 - **Automatisation** : n8n
 - **Intelligence Artificielle** : Agents IA maison pour l'analyse des CV et le matching
 
@@ -19,6 +18,46 @@ TalentMatch est une plateforme qui permet aux ESN (Entreprises de Services du Nu
 - Approche "schema-first" pour garantir l'alignement frontend-backend
 - Architecture hexagonale pour une séparation claire des préoccupations
 - Validation rigoureuse des données à tous les niveaux
+
+## Point d'Étape - 01/05/2025
+
+### Avancement Global
+
+Le projet TalentMatch progresse selon le calendrier prévu, avec une focalisation actuelle sur le développement des fonctionnalités de gestion des consultants et l'amélioration de l'expérience utilisateur. Les développements récents incluent :
+
+- **Interface de création de talents** : Implémentation d'un formulaire multi-étapes avec système de qualification RH intégré
+- **Gestion des statuts consultants** : Extension du système d'énumération des statuts pour une gestion plus fine du cycle de vie des consultants
+- **Amélioration du UI** : Travail sur les composants de pagination, thèmes et tooltips pour une meilleure expérience utilisateur
+- **Tests unitaires** : Renforcement de la couverture des tests pour les fonctionnalités critiques
+
+### Focus Actuel
+
+L'équipe travaille actuellement sur :
+
+1. **Module de création de talents** - Formulaire complet comportant 5 étapes :
+   - Identité et disponibilité
+   - Compétences techniques
+   - Projets et références
+   - Soft skills
+   - Récapitulatif et validation
+
+2. **Système de qualification RH** - Interface permettant aux recruteurs d'évaluer et de qualifier les consultants pendant le processus de création
+
+3. **Gestion des statuts consultants** - Implémentation de nouveaux statuts plus précis :
+   - PROCESS - Consultant en cours de traitement
+   - QUALIFIED - Consultant qualifié et disponible
+   - MISSION - Consultant en mission
+   - INTERCO - Consultant en collaboration inter-ESN
+   - Autres statuts de disponibilité plus spécifiques
+
+### Prochaines Étapes
+
+Pour les semaines à venir, l'équipe va se concentrer sur :
+
+- Finalisation du module de création de talents
+- Implémentation du système de matching avancé
+- Amélioration des filtres et de la recherche de consultants
+- Intégration complète avec les systèmes d'analyse de CV
 
 ## Architecture
 

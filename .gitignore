@@ -1,7 +1,12 @@
+# Ignore Python compiled files
+*.pyc
+__pycache__/
+
+# Node modules and test outputs
+node_modules/
+playwright-report/
+test-results/
 
 # Playwright
-node_modules/
-/test-results/
-/playwright-report/
 /blob-report/
 /playwright/.cache/
